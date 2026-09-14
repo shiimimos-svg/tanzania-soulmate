@@ -6,11 +6,13 @@
     <title>TanzaniaSoulMate - Chat ya Ndani</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .chat-container { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 80vh; }
+        .chat-container { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 85vh; }
         .chat-header { background-color: #d81b60; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
         .chat-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid white; }
         .chat-header h3 { margin: 0; font-size: 16px; }
         .chat-header p { margin: 0; font-size: 12px; opacity: 0.9; }
+        .session-bar { background: #ffebee; padding: 8px 15px; font-size: 12px; color: #d81b60; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffcdd2; }
+        .session-bar select { padding: 4px; border-radius: 4px; border: 1px solid #d81b60; font-size: 12px; }
         .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
         .message { padding: 10px 14px; border-radius: 12px; max-width: 75%; font-size: 14px; line-height: 1.4; }
         .message.sent { background-color: #d81b60; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
@@ -27,6 +29,13 @@
 <body>
 
 <div class="chat-container">
+    <div class="session-bar">
+        <span>Unachati kama: <strong id="currentUserNameLabel">...</strong></span>
+        <select id="userSwitchSelect" onchange="switchUser(this.value)">
+            <!-- Orodha ya watumiaji itakaa hapa -->
+        </select>
+    </div>
+
     <div class="chat-header">
         <img id="partnerPhoto" src="" alt="Partner">
         <div>
@@ -40,7 +49,7 @@
     </div>
 
     <div id="payBanner" class="pay-banner">
-        Meseji zimeisha! Lipia ili ufungue namba ya WhatsApp. 
+        Meseji za bure zimeisha! Lipia ili ufungue namba ya WhatsApp. 
         <button onclick="simulatePayment()">Lipia Sasa 🚀</button>
     </div>
 
@@ -56,37 +65,58 @@
 </div>
 
 <script>
-    // Tutapata ID ya mtumiaji anayechatiwa kupitia URL query parameters (mfano: chat.html?id=2)
     const urlParams = new URLSearchParams(window.location.search);
     const receiverId = urlParams.get('id');
     
-    // Kwa mfano huu wa kwanza, tunatumia ID ya mtumiaji wa kwanza aliyelogin (Tunaweza kuweka localStorage baadaye)
-    // Hapa tunaweka mfano kuwa mtumiaji wa sasa ni ID 1 (Unaweza kubadilisha kadri ya mfumo wako utakavyoshika session)
-    const currentUserId = localStorage.getItem('userId') || 1; 
+    let currentUserId = localStorage.getItem('userId') || 1;
 
     if (!receiverId) {
         alert('Hakuna mtu uliyemchagua wa kuchati naye!');
         window.location.href = 'discover.html';
     }
 
-    async function loadChatPartner() {
+    async function loadAllUsersForSession() {
         try {
             const res = await fetch('/api/admin/users');
             const users = await res.json();
-            const partner = users.find(u => u.id == receiverId);
             
+            const select = document.getElementById('userSwitchSelect');
+            select.innerHTML = '';
+
+            users.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.innerText = u.fullName;
+                if (u.id == currentUserId) {
+                    option.selected = true;
+                    document.getElementById('currentUserNameLabel').innerText = u.fullName;
+                }
+                select.appendChild(option);
+            });
+
+            const partner = users.find(u => u.id == receiverId);
             if (partner) {
                 document.getElementById('partnerPhoto').src = partner.photoUrl;
                 document.getElementById('partnerName').innerText = partner.fullName;
-                document.getElementById('msgCounter').innerText = `Meseji za bure zilizobaki: ${partner.freeMessagesLeft !== undefined ? partner.freeMessagesLeft : 5}`;
-                
-                if (partner.isPaid) {
+            }
+
+            const me = users.find(u => u.id == currentUserId);
+            if (me) {
+                document.getElementById('msgCounter').innerText = `Meseji za bure zilizobaki: ${me.freeMessagesLeft !== undefined ? me.freeMessagesLeft : 5}`;
+                if (me.isPaid) {
                     showWhatsApp(partner.whatsappNumber);
                 }
             }
         } catch (err) {
-            console.error('Hitilafu kupakia taarifa za mshirika:', err);
+            console.error('Hitilafu:', err);
         }
+    }
+
+    function switchUser(newId) {
+        localStorage.setItem('userId', newId);
+        currentUserId = newId;
+        loadAllUsersForSession();
+        loadMessages();
     }
 
     async function loadMessages() {
@@ -150,10 +180,14 @@
                 body: JSON.stringify({ userId: currentUserId })
             });
             const data = await res.json();
+            const usersRes = await fetch('/api/admin/users');
+            const users = await usersRes.json();
+            const partner = users.find(u => u.id == receiverId);
+
             if (res.ok) {
                 alert(data.message);
                 document.getElementById('payBanner').style.display = 'none';
-                showWhatsApp(data.whatsappNumber);
+                if (partner) showWhatsApp(partner.whatsappNumber);
             } else {
                 alert(data.error);
             }
@@ -169,9 +203,9 @@
         document.getElementById('whatsappBanner').style.display = 'block';
     }
 
-    loadChatPartner();
+    loadAllUsersForSession();
     loadMessages();
-    setInterval(loadMessages, 3000); // Kufanya refresh ya meseji kila baada ya sekunde 3
+    setInterval(loadMessages, 3000);
 </script>
 
 </body>
