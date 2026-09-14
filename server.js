@@ -45,7 +45,7 @@ function saveData(filePath, data) {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
-// 1. Kusajili mtumiaji mpya na lengo lake (lookingFor)
+// 1. Kusajili mtumiaji mpya na lengo lake
 app.post('/api/signup', upload.single('photoFile'), (req, res) => {
     try {
         const { fullName, whatsappNumber, lookingFor } = req.body;
@@ -80,7 +80,7 @@ app.post('/api/signup', upload.single('photoFile'), (req, res) => {
     }
 });
 
-// 2. Kuchukua Orodha ya Watu wa Kuonekana kwenye Discover
+// 2. Kuchukua Orodha ya Watu wa Discover
 app.get('/api/users/discover', (req, res) => {
     const users = readData(usersFile);
     const sanitizedUsers = users.map(u => ({
@@ -99,16 +99,15 @@ app.get('/api/admin/users', (req, res) => {
     res.json(users);
 });
 
-// 4. API ya Kutuma Meseji za Ndani ya Mfumo (Inaruhusu meseji kwenda hata kama mtu Hayupo Hewani)
-app.post('/api/chat/send', (req, res) => {
+// 4. API ya Kutuma Meseji na Picha za kwenye Chat
+app.post('/api/chat/send', upload.single('imageFile'), (req, res) => {
     const { senderId, receiverId, messageText } = req.body;
+    const imageFile = req.file;
     const messages = readData(messagesFile);
     const users = readData(usersFile);
 
-    // Tunatafuta mtumaji kwa kulinganisha ID zao (bila kujali kama ni string au number)
     let sender = users.find(u => String(u.id) === String(senderId));
     
-    // Kama mtumaji hana rekodi, tunamtengenezea ya muda ili asikwame
     if (!sender) {
         sender = {
             id: senderId,
@@ -132,11 +131,17 @@ app.post('/api/chat/send', (req, res) => {
         saveData(usersFile, users);
     }
 
+    let imageUrl = null;
+    if (imageFile) {
+        imageUrl = `/uploads/${imageFile.filename}`;
+    }
+
     const newMessage = {
         id: Date.now(),
         senderId: String(senderId),
         receiverId: String(receiverId),
-        messageText,
+        messageText: messageText || '',
+        imageUrl: imageUrl,
         createdAt: new Date()
     };
 
@@ -151,7 +156,7 @@ app.post('/api/chat/send', (req, res) => {
     });
 });
 
-// 5. API ya Kusoma Meseji baina ya Wawili (Inazihifadhi zote ili wakirudi wazikute)
+// 5. API ya Kusoma Meseji baina ya Wawili
 app.get('/api/chat/messages/:user1/:user2', (req, res) => {
     const { user1, user2 } = req.params;
     const messages = readData(messagesFile);
