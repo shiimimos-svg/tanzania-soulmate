@@ -145,9 +145,14 @@ app.post('/api/subscribe/:userId', (req, res) => {
     res.json({ message: "Malipo yamethibitishwa! Una siku 5 za kuchati bila kikomo.", expiresAt: user.subscriptionExpiresAt });
 });
 
-// 7. ROUTE YA KUFUNGUA ADMIN UKURASA MOJA KWA MOJA
+// 7. ROUTE YA KUFUNGUA ADMIN (Lipo nje kwenye root directory pamoja na server.js)
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    const adminPath = path.join(__dirname, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+        res.sendFile(adminPath);
+    } else {
+        res.status(404).send("Ukurasa wa Admin haupatikani kwenye folda kuu.");
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
