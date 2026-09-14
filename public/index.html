@@ -1,1 +1,218 @@
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TanzaniaSoulMate - Pata Mwenza wa Ndoto Zako</title>
+    <style>
+        :root {
+            --primary-pink: #ff2a5f;
+            --secondary-red: #c2185b;
+            --soft-bg: #fff0f3;
+            --text-dark: #2b2b2b;
+            --white: #ffffff;
+            --gold: #d4af37;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: var(--white);
+            max-width: 450px;
+            width: 90%;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 42, 95, 0.15);
+            border: 1px solid #ffccd5;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        h1 {
+            color: var(--secondary-red);
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        p.tagline {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        /* Sehemu ya Gallery ya Picha za Warembo wa Kimataifa */
+        .preview-gallery {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .preview-gallery img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .preview-gallery img:hover {
+            transform: scale(1.1);
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--secondary-red);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ffb3c1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #fff8f9;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+            background-color: var(--white);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-pink), var(--secondary-red));
+            color: var(--white);
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(255, 42, 95, 0.3);
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        #responseMessage {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .links-container {
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .links-container a {
+            color: var(--secondary-red);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .links-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>TanzaniaSoulMate ❤️</h1>
+        <p class="tagline">Mtandao wa kipekee wa kisasa wa kupata mwenza sahihi</p>
+
+        <!-- Picha za Warembo wa Kiafrika, Kifilipino na Kikorea kuongeza mvuto -->
+        <div class="preview-gallery">
+            <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150" alt="Mrembo wa Kiafrika">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Mrembo wa Kikorea">
+            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150" alt="Mrembo wa Kifilipino">
+        </div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label>Jina Lako Kamili:</label>
+                <input type="text" id="fullName" placeholder="Mfano: Juma Ally au Aisha" required>
+            </div>
+
+            <div class="form-group">
+                <label>Namba ya WhatsApp:</label>
+                <input type="text" id="whatsappNumber" placeholder="Mfano: 0712345678" required>
+            </div>
+
+            <div class="form-group">
+                <label>Kiungo cha Picha Yako (Photo URL):</label>
+                <input type="url" id="photoUrl" placeholder="Weka link ya picha yako hapa" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Jiandikishe Sasa</button>
+        </form>
+
+        <p id="responseMessage"></p>
+
+        <div class="links-container">
+            <p>Una picha zilizopitishwa? <a href="/discover.html">Nenda kachati hapa 🚀</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fullName = document.getElementById('fullName').value;
+            const whatsappNumber = document.getElementById('whatsappNumber').value;
+            const photoUrl = document.getElementById('photoUrl').value;
+            const msgEl = document.getElementById('responseMessage');
+
+            try {
+                const res = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, whatsappNumber, photoUrl })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgEl.style.color = "green";
+                    msgEl.innerText = data.message;
+                    document.getElementById('signupForm').reset();
+                } else {
+                    msgEl.style.color = "red";
+                    msgEl.innerText = data.error;
+                }
+            } catch (err) {
+                msgEl.style.color = "red";
+                msgEl.innerText = "Imeshindikana kuunganisha na seva.";
+            }
+        });
+    </script>
+</body>
+</html>

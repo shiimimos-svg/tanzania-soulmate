@@ -1,1 +1,80 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TanzaniaSoulMate - Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #d81b60; text-align: center; }
+        .user-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; }
+        .user-info img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px; vertical-align: middle; }
+        .details { display: inline-block; vertical-align: middle; }
+        button { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-pending { color: orange; font-weight: bold; }
+    </style>
+</head>
+<body>
 
+    <div class="container">
+        <h2>Admin Control Panel - TanzaniaSoulMate ❤️</h2>
+        <p style="text-align: center; color: #666;">Hakiki picha halisi za watumiaji kabla hawajaruhusiwa kutumia huduma.</p>
+        
+        <div id="usersList">
+            <p style="text-align: center;">Inapakia orodha ya watumiaji...</p>
+        </div>
+    </div>
+
+    <script>
+        // Hapa ndipo mfumo utakapovuta orodha ya wote waliojisajili
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const users = await response.json();
+                const container = document.getElementById('usersList');
+                
+                if (users.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">Hakuna watumiaji waliojisajili bado.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                users.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'user-card';
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <img src="${user.photoUrl}" alt="Picha ya Mtumiaji">
+                            <div class="details">
+                                <strong>${user.fullName}</strong><br>
+                                <small>WhatsApp: ${user.whatsappNumber}</small><br>
+                                Status: <span class="${user.isPhotoApproved ? 'status-approved' : 'status-pending'}">
+                                    ${user.isPhotoApproved ? 'Imekubaliwa (Approved)'ahili' : 'Inasubiri Uhakiki (Pending)'}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            ${!user.isPhotoApproved ? `<button onclick="approveUser(${user.id})">Approve Picha</button>` : '<span style="color:gray;">Imeshapitishwa</span>'}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.log("Hitilafu imetokea kupata data.");
+            }
+        }
+
+        async function approveUser(userId) {
+            const res = await fetch(`/api/admin/approve-photo/${userId}`, { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            loadUsers(); // Pakia upya orodha
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
