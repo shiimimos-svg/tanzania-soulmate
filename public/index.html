@@ -57,7 +57,7 @@
             color: #444;
             font-size: 14px;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -114,7 +114,7 @@
             </form>
         </div>
 
-        <!-- SIGNUP FORM (YENYE UPLOAD YA PICHA) -->
+        <!-- SIGNUP FORM (YENYE UPLOAD YA PICHA NA ANALOLITAFUTA) -->
         <div id="signupSection" class="form-section">
             <form id="signupForm" onsubmit="handleSignup(event)">
                 <div class="form-group">
@@ -124,6 +124,14 @@
                 <div class="form-group">
                     <label>Namba ya WhatsApp</label>
                     <input type="text" id="signupPhone" placeholder="Mfano: 0712345678" required>
+                </div>
+                <div class="form-group">
+                    <label>Unatafuta Nini?</label>
+                    <select id="signupSeeking" required>
+                        <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
+                        <option value="Urafiki Tu">Urafiki Tu</option>
+                        <option value="Mahusiano ya Kawaida">Mahusiano ya Kawaida</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Chagua Picha Yako (Upload Photo)</label>
@@ -155,6 +163,7 @@
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
             const whatsappNumber = document.getElementById('signupPhone').value;
+            const seeking = document.getElementById('signupSeeking').value;
             const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
 
@@ -167,7 +176,6 @@
             msgDiv.style.color = 'blue';
             msgDiv.innerText = "Inapakia picha yako, tafadhali subiri...";
 
-            // Badilisha picha kuwa Base64 ili itumwe kwa urahisi kwenye server
             const reader = new FileReader();
             reader.readAsDataURL(photoFile);
             reader.onload = async function () {
@@ -177,7 +185,7 @@
                     const res = await fetch('/api/signup', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fullName, whatsappNumber, photoData })
+                        body: JSON.stringify({ fullName, whatsappNumber, photoData, seeking })
                     });
                     const data = await res.json();
 
