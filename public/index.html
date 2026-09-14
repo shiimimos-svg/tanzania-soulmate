@@ -3,158 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Jisajili</title>
+    <title>TanzaniaSoulMate - Ingia au Jisajili</title>
     <style>
         body {
             background: #fff0f3;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
+            height: 100vh;
         }
         .card {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
+            box-sizing: border-box;
         }
         h2 {
             color: #d63384;
             text-align: center;
-            margin-bottom: 5px;
-        }
-        p.subtitle {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
             margin-bottom: 20px;
         }
-        form {
+        .tabs {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+        }
+        .tab.active {
+            color: #d63384;
+            border-bottom: 2px solid #d63384;
+            margin-bottom: -2px;
+        }
+        .form-group {
+            margin-bottom: 15px;
         }
         label {
-            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #444;
             font-size: 14px;
-            color: #333;
         }
-        input, select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
+        input {
             width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             box-sizing: border-box;
         }
-        input:focus, select:focus {
-            border-color: #d63384;
-        }
         button {
+            width: 100%;
             background: #d63384;
             color: white;
-            padding: 12px;
             border: none;
+            padding: 12px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
             font-size: 16px;
-            transition: background 0.2s;
+            margin-top: 10px;
         }
         button:hover {
-            background: #b8226c;
+            background: #c02974;
         }
-        .login-link {
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .msg {
             text-align: center;
             margin-top: 15px;
             font-size: 14px;
         }
-        .login-link a {
-            color: #d63384;
-            font-weight: bold;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
+
     <div class="card">
         <h2>TanzaniaSoulMate ❤️</h2>
-        <p class="subtitle">Mtandao wa kipekee wa kupata mwenza kulingana na unachohitaji</p>
         
-        <form id="signupForm">
-            <div>
-                <label>Jina Lako Kamili:</label>
-                <input type="text" id="fullName" placeholder="Mfano: Juma Ally" required>
-            </div>
-            
-            <div>
-                <label>Namba ya WhatsApp:</label>
-                <input type="text" id="whatsappNumber" placeholder="Mfano: 0712345678" required>
-            </div>
-            
-            <div>
-                <label>Anachokitafuta Humu:</label>
-                <select id="lookingFor" required>
-                    <option value="">-- Chagua unachokitafuta --</option>
-                    <option value="Natafuta Ndoa ya Kudumu 💍">Natafuta Ndoa ya Kudumu 💍</option>
-                    <option value="Natafuta Uhusiano wa Kuelewana ❤️">Natafuta Uhusiano wa Kuelewana ❤️</option>
-                    <option value="Natafuta Rafiki wa Kupiga Stori 💬">Natafuta Rafiki wa Kupiga Stori 💬</option>
-                </select>
-            </div>
-            
-            <div>
-                <label>Pakia Picha Yako Halisi:</label>
-                <input type="file" id="photoFile" accept="image/*" required>
-            </div>
-            
-            <button type="submit">Jiandikishe Sasa</button>
-        </form>
-        
-        <div class="login-link">
-            Tayari una akaunti? <a href="login.html">Log In hapa 🚀</a>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">Ingia (Login)</div>
+            <div class="tab" onclick="switchTab('signup')">Jisajili (Sign Up)</div>
         </div>
+
+        <!-- LOGIN FORM -->
+        <div id="loginSection" class="form-section active">
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Namba ya WhatsApp</label>
+                    <input type="text" id="loginPhone" placeholder="Mfano: 0712345678" required>
+                </div>
+                <button type="submit">Ingia Kwenye Akaunti</button>
+            </form>
+        </div>
+
+        <!-- SIGNUP FORM -->
+        <div id="signupSection" class="form-section">
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Jina Lako Kamili</label>
+                    <input type="text" id="signupName" placeholder="Andika jina lako" required>
+                </div>
+                <div class="form-group">
+                    <label>Namba ya WhatsApp</label>
+                    <input type="text" id="signupPhone" placeholder="Mfano: 0712345678" required>
+                </div>
+                <div class="form-group">
+                    <label>Link ya Picha Yako (Photo URL)</label>
+                    <input type="text" id="signupPhoto" placeholder="Weka kiungo cha picha yako" required>
+                </div>
+                <button type="submit">Jisajili Sasa</button>
+            </form>
+        </div>
+
+        <div id="message" class="msg"></div>
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+
+            if (tabName === 'login') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginSection').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('signupSection').classList.add('active');
+            }
+            document.getElementById('message').innerText = '';
+        }
+
+        async function handleSignup(e) {
             e.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value;
-            const whatsappNumber = document.getElementById('whatsappNumber').value;
-            const lookingFor = document.getElementById('lookingFor').value;
-            const photoFile = document.getElementById('photoFile').files[0];
-            
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('whatsappNumber', whatsappNumber);
-            formData.append('lookingFor', lookingFor);
-            formData.append('photoFile', photoFile);
-            
+            const fullName = document.getElementById('signupName').value;
+            const whatsappNumber = document.getElementById('signupPhone').value;
+            const photoUrl = document.getElementById('signupPhoto').value;
+            const msgDiv = document.getElementById('message');
+
             try {
-                const response = await fetch('/api/signup', {
+                const res = await fetch('/api/signup', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, whatsappNumber, photoUrl })
                 });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('currentUser', JSON.stringify(data.user));
-                    alert('Umefanikiwa kujisajili! Karibu sana.');
-                    window.location.href = 'discover.html';
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgDiv.style.color = 'green';
+                    msgDiv.innerText = data.message;
+                    setTimeout(() => switchTab('login'), 3000);
                 } else {
-                    alert(data.error || 'Imeshindikana kujisajili.');
+                    msgDiv.style.color = 'red';
+                    msgDiv.innerText = data.error;
                 }
             } catch (err) {
-                console.error(err);
-                alert('Hitilafu ya mtandao.');
+                msgDiv.style.color = 'red';
+                msgDiv.innerText = "Hitilafu ya mtandao. Jaribu tena.";
             }
-        });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value;
+            const msgDiv = document.getElementById('message');
+
+            try {
+                // Tunatumbukiza ukaguzi wa watumiaji kupitia api ya discover au admin
+                const res = await fetch('/api/admin/users');
+                const users = await res.json();
+                
+                const user = users.find(u => u.whatsappNumber === phone);
+
+                if (user) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    msgDiv.style.color = 'green';
+                    msgDiv.innerText = "Umeingia kwa mafanikio! Unapelekwa kwenye ukurasa mkuu...";
+                    setTimeout(() => {
+                        window.location.href = 'discover.html';
+                    }, 1500);
+                } else {
+                    msgDiv.style.color = 'red';
+                    msgDiv.innerText = "Namba hii haijapatikana. Tafadhali jisajili kwanza.";
+                }
+            } catch (err) {
+                msgDiv.style.color = 'red';
+                msgDiv.innerText = "Hitilafu imetokea wakati wa kuingia.";
+            }
+        }
     </script>
 </body>
 </html>
