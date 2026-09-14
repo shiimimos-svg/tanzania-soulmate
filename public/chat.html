@@ -9,197 +9,236 @@
             background: #fff0f3;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        header {
-            background: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        header img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        header h2 {
-            margin: 0;
-            color: #d63384;
-            font-size: 18px;
+            justify-content: center;
         }
         .chat-container {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: #d63384;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 {
+            margin: 0;
+        }
+        .back-btn {
+            background: white;
+            color: #d63384;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            gap: 10px;
+            background: #fafafa;
         }
         .message {
             max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
             font-size: 14px;
-            line-height: 1.4;
+            word-break: break-word;
         }
-        .user-msg {
+        .message.sent {
             background: #d63384;
             color: white;
             align-self: flex-end;
-            border-bottom-right-radius: 2px;
         }
-        .bot-msg {
-            background: white;
+        .message.received {
+            background: #e5e5ea;
             color: #333;
             align-self: flex-start;
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .chat-input-area {
+            padding: 15px;
             background: white;
-            padding: 15px 20px;
+            border-top: 1px solid #eee;
             display: flex;
             gap: 10px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
         }
         .chat-input-area input {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
             outline: none;
-            font-size: 14px;
         }
         .chat-input-area button {
             background: #d63384;
             color: white;
             border: none;
-            padding: 0 20px;
+            padding: 10px 20px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
-        .back-btn {
-            background: none;
+        .locked-overlay {
+            background: #fff0f3;
+            color: #d63384;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #ffccd5;
+            font-weight: bold;
+        }
+        .locked-overlay button {
+            background: #25d366;
+            color: white;
             border: none;
-            color: #555;
-            font-size: 16px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
             cursor: pointer;
-            margin-right: 10px;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <button class="back-btn" onclick="window.location.href='discover.html'">⬅</button>
-        <img id="botAvatar" src="" alt="Bot">
-        <div>
-            <h2 id="botName">Inapakia...</h2>
-            <span style="font-size: 11px; color: #28a745;">🟢 Mtandaoni</span>
+    <div class="chat-container">
+        <div class="chat-header">
+            <button class="back-btn" onclick="window.location.href='discover.html'">Rudi</button>
+            <h3 id="chatTitle">Chat</h3>
+            <span id="msgCount" style="font-size: 12px;">Meseji: 5</span>
         </div>
-    </header>
 
-    <div class="chat-container" id="chatContainer">
-        <div class="message bot-msg">Habari! Karibu sana tupige stori. Ungependa tujadili nini leo?</div>
-    </div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- Meseji zitaingia hapa -->
+        </div>
 
-    <div class="chat-input-area">
-        <input type="text" id="messageInput" placeholder="Andika ujumbe wako hapa..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">Tuma</button>
+        <div id="inputArea" class="chat-input-area">
+            <input type="text5" id="messageInput" placeholder="Andika ujumbe wako..." autocomplete="off">
+            <button onclick="sendMessage()">Tuma</button>
+        </div>
+
+        <div id="lockedArea" class="locked-overlay" style="display: none;">
+            Ujumbe wako wa bure umeisha! Tafadhali lipa TZS 2,000 kwa siku 5 ili uendelee kuchati.
+            <br>
+            <button onclick="paySubscription()">Lipa Sasa (TZS 2,000)</button>
+        </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const botId = urlParams.get('botId');
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const urlParams = new URLSearchParams(window.location.search);
+        const receiverId = urlParams.get('id');
+        const receiverName = urlParams.get('name');
 
-        if (!currentUser) {
-            alert('Tafadhali ingia kwanza!');
-            window.location.href = 'login.html';
+        if (!currentUser || !receiverId) {
+            window.location.href = 'discover.html';
         }
 
-        // Pakia taarifa za bot husika kwenye header
-        async function loadBotInfo() {
+        document.getElementById('chatTitle').innerText = receiverName || 'Mazungumzo';
+
+        async function loadMessages() {
             try {
-                const res = await fetch('/api/bots');
-                const bots = await res.json();
-                const currentBot = bots.find(b => b._id === botId);
-                if (currentBot) {
-                    document.getElementById('botName').innerText = currentBot.name;
-                    document.getElementById('botAvatar').src = currentBot.profilePicture;
+                const res = await fetch(`/api/chat/${currentUser.id}/${receiverId}`);
+                const data = await res.json();
+
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+
+                data.messages.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = `message ${m.senderId == currentUser.id ? 'sent' : 'received'}`;
+                    div.innerText = m.text;
+                    container.appendChild(div);
+                });
+
+                container.scrollTop = container.scrollHeight;
+                document.getElementById('msgCount').innerText = `Zilizobaki: ${data.freeMessagesLeft}`;
+
+                if (!data.isAllowed) {
+                    document.getElementById('inputArea').style.display = 'none';
+                    document.getElementById('lockedArea').style.display = 'block';
+                } else {
+                    document.getElementById('inputArea').style.display = 'flex';
+                    document.getElementById('lockedArea').style.display = 'none';
                 }
             } catch (err) {
-                console.error("Hitilafu ya kupata taarifa za bot:", err);
+                console.error("Hitilafu ya kupakia ujumbe:", err);
             }
         }
 
         async function sendMessage() {
             const input = document.getElementById('messageInput');
-            const messageText = input.value.trim();
-            if (!messageText) return;
-
-            const container = document.getElementById('chatContainer');
-
-            // Weka ujumbe wa mtumiaji kwenye screen
-            container.innerHTML += `<div class="message user-msg">${messageText}</div>`;
-            input.value = '';
-            container.scrollTop = container.scrollHeight;
+            const text = input.value.trim();
+            if (!text) return;
 
             try {
-                const response = await fetch('/api/chat', {
+                const res = await fetch('/api/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        botId: botId,
-                        userMessage: messageText,
-                        userId: currentUser.id || currentUser._id
+                        senderId: currentUser.id,
+                        receiverId: receiverId,
+                        text: text
                     })
                 });
+                const data = await res.json();
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Weka jibu la bot kwenye screen
-                    container.innerHTML += `<div class="message bot-msg">${data.reply}</div>`;
-                    container.scrollTop = container.scrollHeight;
+                if (res.ok) {
+                    input.value = '';
+                    currentUser.freeMessagesLeft = data.freeMessagesLeft;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    loadMessages();
                 } else {
-                    // Kama ujumbe wa bure umeisha na unahitaji malipo
-                    if (data.requiresSubscription) {
-                        alert(data.error);
-                    } else {
-                        alert(data.error || 'Imeshindikana kutuma ujumbe.');
+                    alert(data.error);
+                    if (data.locked) {
+                        document.getElementById('inputArea').style.display = 'none';
+                        document.getElementById('lockedArea').style.display = 'block';
                     }
                 }
             } catch (err) {
-                console.error(err);
-                alert('Hitilafu ya mtandao.');
+                alert("Imeshindikana kutuma ujumbe.");
             }
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
+        async function paySubscription() {
+            if (!confirm("Je, ungependa kulipa TZS 2,000 ili uwe na siku 5 za kuchati bila kikomo?")) return;
+
+            try {
+                const res = await fetch(`/api/subscribe/${currentUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    currentUser.subscriptionExpiresAt = data.expiresAt;
+                    currentUser.freeMessagesLeft = 0;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    alert(data.message);
+                    loadMessages();
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) {
+                alert("Hitilafu ya malipo imetokea.");
             }
         }
 
-        if (botId) {
-            loadBotInfo();
-        }
+        setInterval(loadMessages, 3000); // Kufanya refresh ya ujumbe kila baada ya sekunde 3
+        loadMessages();
     </script>
 </body>
 </html>
