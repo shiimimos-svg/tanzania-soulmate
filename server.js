@@ -183,6 +183,22 @@ app.post('/api/pay', (req, res) => {
     res.json({ success: true, message: 'Malipo yamefanikiwa! Sasa unaweza kuona namba ya WhatsApp.', whatsappNumber: user.whatsappNumber });
 });
 
+// 7. API ya Admin kufuta mtumiaji yeyote
+app.delete('/api/admin/user/:id', (req, res) => {
+    const userId = req.params.id;
+    let users = readData(usersFile);
+    
+    const initialLength = users.length;
+    users = users.filter(u => String(u.id) !== String(userId));
+    
+    if (users.length === initialLength) {
+        return res.status(404).json({ error: 'Mtumaji hajapatikana.' });
+    }
+    
+    saveData(usersFile, users);
+    res.json({ success: true, message: 'Akaunti imefutwa kwa mafanikio!' });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
