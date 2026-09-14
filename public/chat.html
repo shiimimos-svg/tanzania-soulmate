@@ -172,12 +172,18 @@
                 });
 
                 const data = await response.json();
+                
                 if (response.ok) {
                     // Weka jibu la bot kwenye screen
                     container.innerHTML += `<div class="message bot-msg">${data.reply}</div>`;
                     container.scrollTop = container.scrollHeight;
                 } else {
-                    alert(data.error || 'Imeshindikana kutuma ujumbe.');
+                    // Kama ujumbe wa bure umeisha na unahitaji malipo
+                    if (data.requiresSubscription) {
+                        alert(data.error);
+                    } else {
+                        alert(data.error || 'Imeshindikana kutuma ujumbe.');
+                    }
                 }
             } catch (err) {
                 console.error(err);
