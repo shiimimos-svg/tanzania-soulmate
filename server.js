@@ -50,7 +50,7 @@ app.post('/api/signup', (req, res) => {
     res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI (Inatumika na Login pia)
+// 2. KUPATA ORODHA YA WATUMIAJI (Inatumika na Login na Admin)
 app.get('/api/admin/users', (req, res) => {
     res.json(loadData(DATA_FILE, []));
 });
@@ -143,6 +143,11 @@ app.post('/api/subscribe/:userId', (req, res) => {
     saveData(DATA_FILE, users);
 
     res.json({ message: "Malipo yamethibitishwa! Una siku 5 za kuchati bila kikomo.", expiresAt: user.subscriptionExpiresAt });
+});
+
+// 7. ROUTE YA KUFUNGUA ADMIN UKURASA MOJA KWA MOJA
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
