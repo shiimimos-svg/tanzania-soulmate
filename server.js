@@ -39,7 +39,7 @@ app.post('/api/signup', (req, res) => {
         id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
         fullName,
         whatsappNumber,
-        photoUrl: photoData || "https://via.placeholder.com/150",
+        photoData: photoData || "https://via.placeholder.com/150",
         seeking: seeking || "Mchumba",
         freeMessagesLeft: 5,
         subscriptionExpiresAt: null
@@ -50,53 +50,36 @@ app.post('/api/signup', (req, res) => {
     res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI (Inatumika na Login na Admin)
+// 2. KUPATA ORODHA YA WATUMIAJI
 app.get('/api/admin/users', (req, res) => {
     res.json(loadData(DATA_FILE, []));
 });
 
-// 3. KUPATA ORODHA YA DISCOVERY
-app.get('/api/users/discover', (req, res) => {
-    res.json(loadData(DATA_FILE, []));
-});
-
-// 4. KUPATA MAZUNGUMZO KATI YA WATU WAWILI
-app.get('/api/chat/:user1/:user2', (req, res) => {
-    const { user1, user2 } = req.params;
+// 3. KUPATA MAZUNGUMZO KATI YA WATU WAWILI (Kupitia Namba za WhatsApp au IDs)
+app.get('/api/messages', (req, res) => {
+    const { sender, receiver } = req.query;
     let messages = loadData(MESSAGES_FILE, []);
-    let users = loadData(DATA_FILE, []);
-
-    const sender = users.find(u => u.id == user1);
-    const now = new Date();
-    
-    const hasFreeMsgs = sender && sender.freeMessagesLeft > 0;
-    const hasActiveSub = sender && sender.subscriptionExpiresAt && new Date(sender.subscriptionExpiresAt) > now;
-    const isAllowed = hasFreeMsgs || hasActiveSub;
 
     const conversation = messages.filter(m => 
-        (m.senderId == user1 && m.receiverId == user2) || 
-        (m.senderId == user2 && m.receiverId == user1)
+        (m.sender === sender && m.receiver === receiver) || 
+        (m.sender === receiver && m.receiver === sender)
     );
 
-    res.json({
-        messages: conversation,
-        isAllowed: isAllowed,
-        freeMessagesLeft: sender ? sender.freeMessagesLeft : 0
-    });
+    res.json(conversation);
 });
 
-// 5. KUTUMA UJUMBE NDANI YA MFUMO
-app.post('/api/chat/send', (req, res) => {
-    const { senderId, receiverId, text } = req.body;
+// 4. KUTUMA UJUMBE
+app.post('/api/messages', (req, res) => {
+    const { sender, receiver, text } = req.body;
     let users = loadData(DATA_FILE, []);
     let messages = loadData(MESSAGES_FILE, []);
 
-    const sender = users.find(u => u.id == senderId);
-    if (!sender) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
+    const senderUser = users.find(u => u.whatsappNumber === sender);
+    if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
     const now = new Date();
-    const hasFreeMsgs = sender.freeMessagesLeft > 0;
-    const hasActiveSub = sender.subscriptionExpiresAt && new Date(sender.subscriptionExpiresAt) > now;
+    const hasFreeMsgs = senderUser.freeMessagesLeft > 0;
+    const hasActiveSub = senderUser.subscriptionExpiresAt && new Date(senderUser.subscriptionExpiresAt) > now;
 
     if (!hasFreeMsgs && !hasActiveSub) {
         return res.status(403).json({ 
@@ -106,14 +89,14 @@ app.post('/api/chat/send', (req, res) => {
     }
 
     if (!hasActiveSub && hasFreeMsgs) {
-        sender.freeMessagesLeft -= 1;
+        senderUser.freeMessagesLeft -= 1;
         saveData(DATA_FILE, users);
     }
 
     const newMessage = {
         id: Date.now(),
-        senderId: parseInt(senderId),
-        receiverId: parseInt(receiverId),
+        sender,
+        receiver,
         text,
         createdAt: new Date()
     };
@@ -124,15 +107,15 @@ app.post('/api/chat/send', (req, res) => {
     res.json({
         success: true,
         message: newMessage,
-        freeMessagesLeft: sender.freeMessagesLeft
+        freeMessagesLeft: senderUser.freeMessagesLeft
     });
 });
 
-// 6. KULIPIA TZS 2,000 (Siku 5)
-app.post('/api/subscribe/:userId', (req, res) => {
-    const userId = parseInt(req.params.userId);
+// 5. KULIPIA TZS 2,000 (Siku 5)
+app.post('/api/subscribe/:whatsappNumber', (req, res) => {
+    const whatsappNumber = req.params.whatsappNumber;
     let users = loadData(DATA_FILE, []);
-    const user = users.find(u => u.id === userId);
+    const user = users.find(u => u.whatsappNumber === whatsappNumber);
 
     if (!user) return res.status(404).json({ error: "Mtumiaji hajapatikana!" });
 
@@ -145,7 +128,7 @@ app.post('/api/subscribe/:userId', (req, res) => {
     res.json({ message: "Malipo yamethibitishwa! Una siku 5 za kuchati bila kikomo.", expiresAt: user.subscriptionExpiresAt });
 });
 
-// 7. ROUTE YA KUFUNGUA ADMIN (Lipo nje kwenye root directory pamoja na server.js)
+// 6. ADMIN ROUTE
 app.get('/admin', (req, res) => {
     const adminPath = path.join(__dirname, 'admin.html');
     if (fs.existsSync(adminPath)) {
