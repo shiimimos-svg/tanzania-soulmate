@@ -50,6 +50,12 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .user-left {
+            display: flex;
+            align-items: center;
             gap: 20px;
         }
         .user-card img {
@@ -66,6 +72,20 @@
             margin: 0;
             color: #666;
             font-size: 14px;
+        }
+        .chat-btn {
+            background: #d63384;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .chat-btn:hover {
+            background: #b8226c;
         }
     </style>
 </head>
@@ -85,8 +105,8 @@
     </header>
 
     <div class="container">
-        <h2>Watu Waliopo Kwenye Mfumo</h2>
-        <div id="usersList">Inapakia taarifa...</div>
+        <h2>Watu Waliopo Kwenye Mfumo (Bots & Members)</h2>
+        <div id="usersList">Inapakia taarifa kutoka Database...</div>
     </div>
 
     <script>
@@ -96,33 +116,38 @@
             window.location.href = 'login.html';
         }
 
-        async function loadUsers() {
+        async function loadBots() {
             try {
-                const res = await fetch('/api/users/discover');
-                const users = await res.json();
+                // Tunaita orodha ya bot 500 kutoka MongoDB kupitia server yetu
+                const res = await fetch('/api/bots');
+                const bots = await res.json();
                 const container = document.getElementById('usersList');
                 
-                if (users.length === 0) {
-                    container.innerHTML = '<p>Hakuna watumiaji waliopatikana kwa sasa.</p>';
+                if (bots.length === 0) {
+                    container.innerHTML = '<p>Hakuna bot zilizopatikana kwenye mfumo kwa sasa.</p>';
                     return;
                 }
 
-                container.innerHTML = users.map(u => `
+                container.innerHTML = bots.map(b => `
                     <div class="user-card">
-                        <img src="${u.photoUrl}" alt="${u.fullName}">
-                        <div class="user-info">
-                            <h3>${u.fullName}</h3>
-                            <p>Anachokitafuta: ${u.lookingFor}</p>
+                        <div class="user-left">
+                            <img src="${b.profilePicture}" alt="${b.name}">
+                            <div class="user-info">
+                               <h3>${b.name}, ${b.age}</h3>
+                               <p>${b.bio || 'Mtaalam wa kupiga stori na kujivinjari.'}</p>
+                               <span style="font-size: 12px; color: #28a745; font-weight: bold;">🟢 Mtandaoni Sasa</span>
+                            </div>
                         </div>
+                        <a href="chat.html?botId=${b._id}" class="chat-btn">Anza Kuchati</a>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error(err);
-                document.getElementById('usersList').innerHTML = '<p>Hitilafu ya kupata data za watumiaji.</p>';
+                document.getElementById('usersList').innerHTML = '<p>Hitilafu ya kupata data za bot kwenye database.</p>';
             }
         }
 
-        loadUsers();
+        loadBots();
     </script>
 </body>
 </html>
