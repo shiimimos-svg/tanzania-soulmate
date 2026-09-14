@@ -65,6 +65,45 @@ function saveUsers(users) {
     }
 }
 
+// --- SUBSCRIPTION GUARD MIDDLEWARE ---
+async function checkSubscription(req, res, next) {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(401).json({ error: "Tafadhali ingia kwenye akaunti yako kwanza." });
+        }
+
+        const users = loadUsers();
+        const user = users.find(u => u.id == userId || u._id == userId);
+
+        if (!user) {
+            return res.status(404).json({ error: "Mtumiaji hajapatikana kwenye mfumo." });
+        }
+
+        const now = new Date();
+        const hasFreeMsgs = user.freeMessagesLeft > 0;
+        const hasActiveSub = user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > now;
+
+        if (!hasFreeMsgs && !hasActiveSub) {
+            return res.status(403).json({ 
+                error: "Ujumbe wako wa bure umeisha! Tafadhali lipa TZS 2,000 ili uendelee kuchati.",
+                requiresSubscription: true 
+            });
+        }
+
+        // Kama ana ujumbe wa bure, mpunguze moja
+        if (hasFreeMsgs && !hasActiveSub) {
+            user.freeMessagesLeft -= 1;
+            saveUsers(users);
+        }
+
+        next();
+    } catch (err) {
+        console.error("Hitilafu kwenye Subscription Guard:", err);
+        res.status(500).json({ error: "Hitilafu ya kimfumo kwenye uhakiki wa malipo." });
+    }
+}
+
 // 1. URASILIMALI WA KUJISAJILI (SIGNUP)
 app.post('/api/signup', (chombo, jibu) => {
     const { fullName, whatsappNumber, photoUrl } = chombo.body;
@@ -190,8 +229,8 @@ app.get('/api/bots', async (chombo, jibu) => {
     }
 });
 
-// Kutuma ujumbe na kupokea jibu la kiotomatiki kutoka kwa Bot
-app.post('/api/chat', async (chombo, jibu) => {
+// Kutuma ujumbe na kupokea jibu la kiotomatiki kutoka kwa Bot (Imewekewa CheckSubscription Guard)
+app.post('/api/chat', checkSubscription, async (chombo, jibu) => {
     try {
         const { botId, userMessage, userId } = chombo.body;
 
