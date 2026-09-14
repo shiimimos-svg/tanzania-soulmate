@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TanzaniaSoulMate - Chat ya Ndani</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .chat-container { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 80vh; }
+        .chat-header { background-color: #d81b60; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
+        .chat-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid white; }
+        .chat-header h3 { margin: 0; font-size: 16px; }
+        .chat-header p { margin: 0; font-size: 12px; opacity: 0.9; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
+        .message { padding: 10px 14px; border-radius: 12px; max-width: 75%; font-size: 14px; line-height: 1.4; }
+        .message.sent { background-color: #d81b60; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .message.received { background-color: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
+        .chat-input-area input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
+        .chat-input-area button { background-color: #d81b60; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .pay-banner { background: #fff3cd; color: #856404; padding: 12px; text-align: center; font-size: 13px; border-top: 1px solid #ffeeba; display: none; }
+        .pay-banner button { background-color: #ffc107; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 10px; color: #000; }
+        .whatsapp-banner { background: #d4edda; color: #155724; padding: 12px; text-align: center; font-size: 13px; border-top: 1px solid #c3e6cb; display: none; }
+        .whatsapp-banner a { background-color: #25D366; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-left: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <img id="partnerPhoto" src="" alt="Partner">
+        <div>
+            <h3 id="partnerName">Inapakia...</h3>
+            <p id="msgCounter">Meseji za bure zilizobaki: 5</p>
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <!-- Meseji zitaonekana hapa -->
+    </div>
+
+    <div id="payBanner" class="pay-banner">
+        Meseji zimeisha! Lipia ili ufungue namba ya WhatsApp. 
+        <button onclick="simulatePayment()">Lipia Sasa 🚀</button>
+    </div>
+
+    <div id="whatsappBanner" class="whatsapp-banner">
+        Namba ya WhatsApp imefunguliwa! 
+        <a id="whatsappLink" href="#" target="_blank">Chati WhatsApp 💬</a>
+    </div>
+
+    <form class="chat-input-area" id="chatForm">
+        <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." required>
+        <button type="submit">Tuma</button>
+    </form>
+</div>
+
+<script>
+    // Tutapata ID ya mtumiaji anayechatiwa kupitia URL query parameters (mfano: chat.html?id=2)
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiverId = urlParams.get('id');
+    
+    // Kwa mfano huu wa kwanza, tunatumia ID ya mtumiaji wa kwanza aliyelogin (Tunaweza kuweka localStorage baadaye)
+    // Hapa tunaweka mfano kuwa mtumiaji wa sasa ni ID 1 (Unaweza kubadilisha kadri ya mfumo wako utakavyoshika session)
+    const currentUserId = localStorage.getItem('userId') || 1; 
+
+    if (!receiverId) {
+        alert('Hakuna mtu uliyemchagua wa kuchati naye!');
+        window.location.href = 'discover.html';
+    }
+
+    async function loadChatPartner() {
+        try {
+            const res = await fetch('/api/admin/users');
+            const users = await res.json();
+            const partner = users.find(u => u.id == receiverId);
+            
+            if (partner) {
+                document.getElementById('partnerPhoto').src = partner.photoUrl;
+                document.getElementById('partnerName').innerText = partner.fullName;
+                document.getElementById('msgCounter').innerText = `Meseji za bure zilizobaki: ${partner.freeMessagesLeft !== undefined ? partner.freeMessagesLeft : 5}`;
+                
+                if (partner.isPaid) {
+                    showWhatsApp(partner.whatsappNumber);
+                }
+            }
+        } catch (err) {
+            console.error('Hitilafu kupakia taarifa za mshirika:', err);
+        }
+    }
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(`/api/chat/messages/${currentUserId}/${receiverId}`);
+            const messages = await res.json();
+            
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.senderId == currentUserId ? 'sent' : 'received'}`;
+                div.innerText = msg.messageText;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        } catch (err) {
+            console.error('Hitilafu kupakia meseji:', err);
+        }
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const messageText = input.value.trim();
+        if (!messageText) return;
+
+        try {
+            const res = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderId: currentUserId,
+                    receiverId: receiverId,
+                    messageText: messageText
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                input.value = '';
+                document.getElementById('msgCounter').innerText = `Meseji za bure zilizobaki: ${data.freeMessagesLeft}`;
+                loadMessages();
+            } else {
+                if (data.requiresPayment) {
+                    document.getElementById('payBanner').style.display = 'block';
+                }
+                alert(data.error);
+            }
+        } catch (err) {
+            console.error('Imeshindwa kutuma ujumbe:', err);
+        }
+    });
+
+    async function simulatePayment() {
+        try {
+            const res = await fetch('/api/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                document.getElementById('payBanner').style.display = 'none';
+                showWhatsApp(data.whatsappNumber);
+            } else {
+                alert(data.error);
+            }
+        } catch (err) {
+            console.error('Malipo yameshindwa:', err);
+        }
+    }
+
+    function showWhatsApp(number) {
+        const cleanNumber = number.replace(/^0+/, '');
+        const waLink = document.getElementById('whatsappLink');
+        waLink.href = `https://wa.me/255${cleanNumber}`;
+        document.getElementById('whatsappBanner').style.display = 'block';
+    }
+
+    loadChatPartner();
+    loadMessages();
+    setInterval(loadMessages, 3000); // Kufanya refresh ya meseji kila baada ya sekunde 3
+</script>
+
+</body>
+</html>
