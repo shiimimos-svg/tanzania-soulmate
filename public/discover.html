@@ -15,9 +15,27 @@
             max-width: 900px;
             margin: 0 auto;
         }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         h2 {
             color: #d63384;
-            text-align: center;
+            margin: 0;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background: #c82333;
         }
         .grid {
             display: grid;
@@ -47,6 +65,16 @@
             font-size: 14px;
             margin: 0 0 15px;
         }
+        .seeking-badge {
+            display: inline-block;
+            background: #fff0f3;
+            color: #d63384;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
         .card button {
             background: #25d366;
             color: white;
@@ -70,12 +98,16 @@
 <body>
 
     <div class="container">
-        <h2>Watumiaji Halisi Waliopo Hewani ❤️</h2>
+        <div class="header-bar">
+            <h2>Watumiaji Halisi Waliopo Hewani ❤️</h2>
+            <button class="logout-btn" onclick="handleLogout()">Toka (Log Out)</button>
+        </div>
+
         <div class="grid" id="userGrid">
             <!-- Watumiaji wataingizwa hapa kupitia JavaScript -->
         </div>
         <div id="noUsersMessage" class="no-users" style="display: none;">
-            Hakuna watumiaji waliothibitishwa kwa sasa. Tafadhali subiri au jisajili!
+            Hakuna watumiaji waliopo hewani kwa sasa. Tafadhali subiri au jisajili!
         </div>
     </div>
 
@@ -102,6 +134,7 @@
                     card.innerHTML = `
                         <img src="${user.photoUrl}" alt="${user.fullName}">
                         <h3>${user.fullName}</h3>
+                        <div class="seeking-badge">Anatafuta: ${user.seeking || 'Mchumba'}</div>
                         <p>Mwanachama Halisi</p>
                         <button onclick="connectWhatsApp('${user.whatsappNumber}', '${user.fullName}')">Unganisha WhatsApp</button>
                     `;
@@ -115,6 +148,11 @@
         function connectWhatsApp(number, name) {
             const url = `https://wa.me/${number}?text=Habari%20${name},%20nimekuona%20kupitia%20TanzaniaSoulMate!`;
             window.open(url, '_blank');
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
         }
 
         loadDiscoverUsers();
