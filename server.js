@@ -45,10 +45,10 @@ function saveData(filePath, data) {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
-// 1. Kusajili mtumiaji mpya (Picha inapita moja kwa moja, freeMessages = 5)
+// 1. Kusajili mtumiaji mpya na lengo lake (lookingFor)
 app.post('/api/signup', upload.single('photoFile'), (req, res) => {
     try {
-        const { fullName, whatsappNumber } = req.body;
+        const { fullName, whatsappNumber, lookingFor } = req.body;
         const photoFile = req.file;
 
         if (!fullName || !whatsappNumber || !photoFile) {
@@ -63,9 +63,10 @@ app.post('/api/signup', upload.single('photoFile'), (req, res) => {
             fullName,
             whatsappNumber,
             photoUrl,
+            lookingFor: lookingFor || 'Natafuta uhusiano mzuri', // Hapa tunahifadhi lengo lake
             isPhotoApproved: true,
-            freeMessagesLeft: 5, // Amezawadiwa meseji 5 za kwanza bure
-            isPaid: false,       // Hajalipia bado kuona namba
+            freeMessagesLeft: 5, 
+            isPaid: false,       
             createdAt: new Date()
         };
 
@@ -82,12 +83,11 @@ app.post('/api/signup', upload.single('photoFile'), (req, res) => {
 // 2. Kuchukua Orodha ya Watu wa Kuonekana kwenye Discover
 app.get('/api/users/discover', (req, res) => {
     const users = readData(usersFile);
-    // Tunatuma taarifa zao LAKINI tunaweza kuficha namba ya whatsapp kwenye frontend au hapa hapa
     const sanitizedUsers = users.map(u => ({
         id: u.id,
         fullName: u.fullName,
         photoUrl: u.photoUrl,
-        // Namba ya whatsapp hatuitoi moja kwa moja mpaka alipie au kumaliza chat
+        lookingFor: u.lookingFor || 'Natafuta uhusiano mzuri',
         hasUnlockedWhatsApp: u.isPaid 
     }));
     res.json(sanitizedUsers);
@@ -105,7 +105,6 @@ app.post('/api/chat/send', (req, res) => {
     const messages = readData(messagesFile);
     const users = readData(usersFile);
 
-    // Tafuta mtumaji ili tupunguze freeMessages zake kama bado hajalipia
     const sender = users.find(u => u.id == senderId);
     if (!sender) return res.status(404).json({ error: 'Mtumaji hajapatikana.' });
 
@@ -152,13 +151,13 @@ app.get('/api/chat/messages/:user1/:user2', (req, res) => {
     res.json(conversation);
 });
 
-// 6. API ya Kuiga Malipo (Ili mtumiaji afunguliwe namba ya WhatsApp)
+// 6. API ya Kuiga Malipo
 app.post('/api/pay', (req, res) => {
     const { userId } = req.body;
     const users = readData(usersFile);
     const user = users.find(u => u.id == userId);
 
-    if (!user) return res.status(404).json({ error: 'Mtumiaji hapatikani.' });
+    if (!user) return res.status(404).json({ error: 'Mtumaji hapatikani.' });
 
     user.isPaid = true;
     saveData(usersFile, users);
