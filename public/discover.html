@@ -229,7 +229,7 @@
     <div class="container">
         <h2>Watu Waliopo Karibu Yako ❤️</h2>
         <div id="usersGrid" class="users-grid">
-            <!-- Orodha ya watumiaji itajazwa hapa na JavaScript -->
+            <!-- Watumiaji watajazwa hapa -->
         </div>
     </div>
 
@@ -244,7 +244,7 @@
                 <!-- Meseji zitaonekana hapa -->
             </div>
             <div class="chat-input-area">
-                <input type="text" id="messageInput" placeholder="Andika ujumbe wako...">
+                <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." onkeypress="handleKeyPress(event)">
                 <button onclick="sendMessage()">Tuma</button>
             </div>
         </div>
@@ -268,7 +268,6 @@
                 grid.innerHTML = '';
 
                 users.forEach(u => {
-                    // Jionyeshe au onyesha wengine wote
                     if (u.whatsappNumber !== currentUser.whatsappNumber) {
                         const card = document.createElement('div');
                         card.className = 'user-card';
@@ -334,12 +333,22 @@
                     })
                 });
 
+                const data = await res.json();
+
                 if (res.ok) {
                     input.value = '';
                     loadMessages();
+                } else {
+                    alert(data.error || "Imeshindikana kutuma ujumbe.");
                 }
             } catch (err) {
                 console.error("Hitilafu ya kutuma meseji", err);
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
         }
 
@@ -348,7 +357,6 @@
             window.location.href = 'index.html';
         }
 
-        // Pakia watumiaji ukurasa unapofunguka
         loadUsers();
 
         // Kurefresh meseji kila baada ya sekunde 3 ili kuona mpya zikitumwa
