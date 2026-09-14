@@ -3,222 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watumiaji - TanzaniaSoulMate</title>
+    <title>TanzaniaSoulMate - Discover</title>
     <style>
+        :root {
+            --primary: #d63384;
+            --primary-hover: #c02974;
+            --text-dark: #111827;
+            --text-muted: #4b5563;
+            --bg-light: #fff0f3;
+        }
+
         body {
-            background: #fff0f3;
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .header-bar {
+
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            padding: 15px 40px;
+            background: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        h2 {
-            color: #d63384;
-            margin: 0;
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-dark);
+            text-decoration: none;
         }
+
+        .logo span {
+            color: var(--primary);
+        }
+
         .user-info {
-            font-size: 14px;
-            color: #555;
-            font-weight: bold;
-        }
-        .btn-group {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 15px;
         }
-        .action-btn {
-            background: #d63384;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+
         .logout-btn {
-            background: #dc3545;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
         }
-        .grid {
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .users-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 20px;
         }
-        .card {
+
+        .user-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             text-align: center;
             padding-bottom: 15px;
         }
-        .card img {
+
+        .user-card img {
             width: 100%;
-            height: 250px;
+            height: 220px;
             object-fit: cover;
         }
-        .card h3 {
-            margin: 10px 0 5px;
-            color: #333;
+
+        .user-card h3 {
+            margin: 12px 0 5px 0;
+            font-size: 18px;
         }
-        .seeking-badge {
-            display: inline-block;
-            background: #fff0f3;
-            color: #d63384;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 10px;
+
+        .user-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0 0 15px 0;
         }
-        .card button {
-            background: #d63384;
+
+        .chat-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Chat Modal */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .chat-box {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            height: 500px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-weight: bold;
         }
-        .card button:hover {
-            background: #b0266b;
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
         }
-        .no-users {
-            text-align: center;
-            color: #777;
-            margin-top: 40px;
-            font-size: 16px;
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.incoming {
+            background: #e5e7eb;
+            color: var(--text-dark);
+            align-self: flex-start;
+        }
+
+        .message.outgoing {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .chat-input-area button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 16px;
+            margin-left: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header-bar">
-            <h2>TanzaniaSoulMate ❤️</h2>
-            <div id="userStatus" class="user-info">Inapakia taarifa zako...</div>
-            <div class="btn-group">
-                <button class="action-btn" onclick="paySubscription()">Lipa TZS 2,000 (Siku 5)</button>
-                <button class="logout-btn" onclick="handleLogout()">Toka (Log Out)</button>
-            </div>
+    <header>
+        <a href="#" class="logo">❤️ Tanzania<span>SoulMate</span></a>
+        <div class="user-info">
+            <span id="welcomeUser">Karibu</span>
+            <button class="logout-btn" onclick="logout()">Toka (Log Out)</button>
         </div>
+    </header>
 
-        <div class="grid" id="userGrid"></div>
-        <div id="noUsersMessage" class="no-users" style="display: none;">
-            Hakuna watumiaji waliyojiunga kwa sasa.
+    <div class="container">
+        <h2>Watu Waliopo Karibu Yako ❤️</h2>
+        <div id="usersGrid" class="users-grid">
+            <!-- Orodha ya watumiaji itajazwa hapa na JavaScript -->
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="chat-modal">
+        <div class="chat-box">
+            <div class="chat-header">
+                <span id="chatWithTitle">Mazungumzo</span>
+                <button class="close-chat" onclick="closeChat()">&times;</button>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <!-- Meseji zitaonekana hapa -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Andika ujumbe wako...">
+                <button onclick="sendMessage()">Tuma</button>
+            </div>
         </div>
     </div>
 
     <script>
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-
         if (!currentUser) {
             window.location.href = 'index.html';
+        } else {
+            document.getElementById('welcomeUser').innerText = `Karibu, ${currentUser.fullName}`;
         }
 
-        function updateStatusDisplay() {
-            const statusDiv = document.getElementById('userStatus');
-            const now = new Date();
-            const hasActiveSub = currentUser.subscriptionExpiresAt && new Date(currentUser.subscriptionExpiresAt) > now;
+        let activeChatUserPhone = null;
 
-            if (hasActiveSub) {
-                statusDiv.innerHTML = `Akaunti Yako: <span style="color: green;">VIP (Siku 5)</span>`;
-            } else {
-                statusDiv.innerHTML = `Ujumbe wa Bure Uliobakia: <span style="color: #d63384; font-weight: bold;">${currentUser.freeMessagesLeft} / 5</span>`;
-            }
-        }
-
-        async function loadDiscoverUsers() {
+        async function loadUsers() {
             try {
-                const response = await fetch('/api/users/discover');
-                const users = await response.json();
-                
-                const grid = document.getElementById('userGrid');
-                const noUsersMsg = document.getElementById('noUsersMessage');
+                const res = await fetch('/api/admin/users');
+                const users = await res.json();
+                const grid = document.getElementById('usersGrid');
                 grid.innerHTML = '';
 
-                const otherUsers = users.filter(u => u.id !== currentUser.id);
-
-                if (otherUsers.length === 0) {
-                    noUsersMsg.style.display = 'block';
-                    return;
-                }
-
-                noUsersMsg.style.display = 'none';
-
-                otherUsers.forEach(user => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <img src="${user.photoUrl}" alt="${user.fullName}">
-                        <h3>${user.fullName}</h3>
-                        <div class="seeking-badge">Anatafuta: ${user.seeking || 'Mchumba'}</div>
-                        <br>
-                        <button onclick="startChat(${user.id}, '${user.fullName}')">Anzisha Mazungumzo</button>
-                    `;
-                    grid.appendChild(card);
+                users.forEach(u => {
+                    // Jionyeshe au onyesha wengine wote
+                    if (u.whatsappNumber !== currentUser.whatsappNumber) {
+                        const card = document.createElement('div');
+                        card.className = 'user-card';
+                        card.innerHTML = `
+                            <img src="${u.photoData || 'https://via.placeholder.com/250'}" alt="Picha">
+                            <h3>${u.fullName}</h3>
+                            <p>Anatafuta: ${u.seeking || 'Urafiki'}</p>
+                            <button class="chat-btn" onclick="openChat('${u.whatsappNumber}', '${u.fullName}')">Anzisha Mazungumzo</button>
+                        `;
+                        grid.appendChild(card);
+                    }
                 });
-
-                updateStatusDisplay();
             } catch (err) {
-                console.error("Hitilafu ya kupata watumiaji:", err);
+                console.error("Imeshindikana kupakia watumiaji", err);
             }
         }
 
-        function startChat(targetId, targetName) {
-            window.location.href = `chat.html?id=${targetId}&name=${encodeURIComponent(targetName)}`;
+        function openChat(phone, name) {
+            activeChatUserPhone = phone;
+            document.getElementById('chatWithTitle').innerText = `Chat na ${name}`;
+            document.getElementById('chatModal').style.display = 'flex';
+            loadMessages();
         }
 
-        async function paySubscription() {
-            if (!confirm("Je, ungependa kulipa TZS 2,000 ili uwe na siku 5 za kuchati na kuona ujumbe wote?")) return;
+        function closeChat() {
+            document.getElementById('chatModal').style.display = 'none';
+            activeChatUserPhone = null;
+        }
+
+        async function loadMessages() {
+            if (!activeChatUserPhone) return;
+            try {
+                const res = await fetch(`/api/messages?sender=${currentUser.whatsappNumber}&receiver=${activeChatUserPhone}`);
+                const messages = await res.json();
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+
+                messages.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = `message ${m.sender === currentUser.whatsappNumber ? 'outgoing' : 'incoming'}`;
+                    div.innerText = m.text;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            } catch (err) {
+                console.error("Hitilafu ya kupata meseji", err);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !activeChatUserPhone) return;
 
             try {
-                const res = await fetch(`/api/subscribe/${currentUser.id}`, {
+                const res = await fetch('/api/messages', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender: currentUser.whatsappNumber,
+                        receiver: activeChatUserPhone,
+                        text: text
+                    })
                 });
-                const data = await res.json();
 
                 if (res.ok) {
-                    currentUser.subscriptionExpiresAt = data.expiresAt;
-                    currentUser.freeMessagesLeft = 0;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert(data.message);
-                    updateStatusDisplay();
-                } else {
-                    alert(data.error);
+                    input.value = '';
+                    loadMessages();
                 }
             } catch (err) {
-                alert("Hitilafu ya malipo imetokea.");
+                console.error("Hitilafu ya kutuma meseji", err);
             }
         }
 
-        function handleLogout() {
+        function logout() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
 
-        loadDiscoverUsers();
+        // Pakia watumiaji ukurasa unapofunguka
+        loadUsers();
+
+        // Kurefresh meseji kila baada ya sekunde 3 ili kuona mpya zikitumwa
+        setInterval(() => {
+            if (activeChatUserPhone) {
+                loadMessages();
+            }
+        }, 3000);
     </script>
 </body>
 </html>
