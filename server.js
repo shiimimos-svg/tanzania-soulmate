@@ -1,243 +1,245 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
-
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Weka URI ya MongoDB kutoka kwenye Environment Variables za Render
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB imeunganishwa kwa mafanikio!'))
-    .catch(err => console.error('Hitilafu ya kuunganisha MongoDB:', err));
-
-// Schemas na Models za Database
-const userSchema = new mongoose.Schema({
-    id: { type: Number, unique: true },
-    fullName: String,
-    whatsappNumber: { type: String, unique: true },
-    photoUrl: String,
-    lookingFor: { type: String, default: 'Natafuta uhusiano mzuri' },
-    isPhotoApproved: { type: Boolean, default: true },
-    freeMessagesLeft: { type: Number, default: 5 },
-    isPaid: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const messageSchema = new mongoose.Schema({
-    id: { type: Number, unique: true },
-    senderId: String,
-    receiverId: String,
-    messageText: String,
-    imageUrl: String,
-    createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
-const Message = mongoose.model('Message', messageSchema);
-
-// Folda ya uploads ya picha
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage: storage });
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(uploadDir));
+app.use(express.static('public'));
 
-// 1. Kusajili mtumiaji mpya
-app.post('/api/signup', upload.single('photoFile'), async (req, res) => {
+// Muunganisho wa MongoDB Atlas kwa ajili ya Bots na Messages
+const MONGO_URI = "mongodb+srv://shiimimos_db_user:Shimilimana123456789@cluster0.du5ze4u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("Imeunganishwa na MongoDB Atlas kwa mafanikio kwenye server.js!"))
+  .catch(err => console.error("Hitilafu ya kuunganisha na Database:", err));
+
+// Schema ya Bot Profile kutoka MongoDB
+const botProfileSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  gender: { type: String, enum: ['Male', 'Female'], required: true },
+  age: { type: Number, required: true },
+  profilePicture: { type: String, required: true },
+  bio: { type: String },
+  isAlwaysOnline: { type: Boolean, default: true },
+  lastActive: { type: Date, default: Date.now }
+});
+
+const BotProfile = mongoose.model('BotProfile', botProfileSchema);
+
+// Schema ya Messages (Ujumbe wa Chat)
+const messageSchema = new mongoose.Schema({
+  sender: { type: String, required: true },
+  recipient: { type: String, required: true },
+  content: { type: String, required: true },
+  isBotResponse: { type: Boolean, default: false },
+  timestamp: { type: Date, default: Date.now }
+});
+
+const Message = mongoose.model('Message', messageSchema);
+
+const DATA_FILE = path.join(__dirname, 'users.json');
+
+// Kazi ya kusoma data kutoka kwenye faili la JSON
+function loadUsers() {
     try {
-        const { fullName, whatsappNumber, lookingFor } = req.body;
-        const photoFile = req.file;
-
-        if (!fullName || !whatsappNumber || !photoFile) {
-            return res.status(400).json({ error: 'Tafadhali jaza taarifa zote na uweke picha!' });
+        if (!fs.existsSync(DATA_FILE)) {
+            fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
         }
+        const data = fs.readFileSync(DATA_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Hitilafu ya kusoma faili la data:", err);
+        return [];
+    }
+}
 
-        // Angalia kama namba ya WhatsApp imeshasajiliwa tayari
-        const existingUser = await User.findOne({ whatsappNumber });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Namba hii ya WhatsApp imeshasajiliwa tayari. Tafadhali Log In!' });
-        }
+// Kazi ya kuandika na kuhifadhi data kwenye faili la JSON
+function saveUsers(users) {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(users, null, 2));
+    } catch (err) {
+        console.error("Hitilafu ya kuhifadhi faili la data:", err);
+    }
+}
 
-        const lastUser = await User.findOne().sort({ id: -1 });
-        const newId = lastUser ? lastUser.id + 1 : 1;
-        const photoUrl = `/uploads/${photoFile.filename}`;
+// 1. URASILIMALI WA KUJISAJILI (SIGNUP)
+app.post('/api/signup', (chombo, jibu) => {
+    const { fullName, whatsappNumber, photoUrl } = chombo.body;
+    let users = loadUsers();
 
-        const newUser = new User({
-            id: newId,
-            fullName,
-            whatsappNumber,
-            photoUrl,
-            lookingFor: lookingFor || 'Natafuta uhusiano mzuri',
-            isPhotoApproved: true,
-            freeMessagesLeft: 5,
-            isPaid: false
+    const existingUser = users.find(u => u.whatsappNumber === whatsappNumber);
+    if (existingUser) {
+        return jibu.status(400).json({ error: "Namba hii ya WhatsApp imeshajisajili tayari!" });
+    }
+
+    const newUser = {
+        id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
+        fullName,
+        whatsappNumber,
+        photoUrl,
+        isPhotoApproved: false, 
+        freeMessagesLeft: 3,    
+        subscriptionExpiresAt: null, 
+        createdAt: new Date()
+    };
+
+    users.push(newUser);
+    saveUsers(users);
+
+    jibu.status(201).json({
+        message: "Umefanikiwa kujisajili! Tafadhali subiri Admin ahakiki picha yako ili uanze kutumia huduma.",
+        user: newUser
+    });
+});
+
+// 2. KUONESHA ORODHA YOTE YA WATUMIAJI KWA AJILI YA ADMIN
+app.get('/api/admin/users', (chombo, jibu) => {
+    const users = loadUsers();
+    jibu.json(users);
+});
+
+// 3. KUIDHINISHA PICHA (ADMIN APPROVAL)
+app.post('/api/admin/approve-photo/:userId', (chombo, jibu) => {
+    const userId = parseInt(chombo.params.userId);
+    let users = loadUsers();
+    const user = users.find(u => u.id === userId);
+
+    if (!user) {
+        return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
+    }
+
+    user.isPhotoApproved = true; 
+    saveUsers(users);
+
+    jibu.json({ message: `Picha ya ${user.fullName} imeidhinishwa kikamilifu! Sasa anaweza kuendelea.`, user });
+});
+
+// 4. KUSHUGHULIKIA MALIPO YA TZS 2,000 (Siku 5 za Uhakika)
+app.post('/api/subscribe/:userId', (chombo, jibu) => {
+    const userId = parseInt(chombo.params.userId);
+    let users = loadUsers();
+    const user = users.find(u => u.id === userId);
+
+    if (!user) {
+        return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
+    }
+
+    if (!user.isPhotoApproved) {
+        return jibu.status(403).json({ error: "Huruhusiwi kulipia mpaka picha yako ihakikiwe na Admin kwanza!" });
+    }
+
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 5);
+
+    user.subscriptionExpiresAt = expiryDate;
+    user.freeMessagesLeft = 0; 
+    saveUsers(users);
+
+    jibu.json({ 
+        message: "Malipo ya TZS 2,000 yamethibitishwa kikamilifu! Una siku 5 za kuchati na kufurahia TanzaniaSoulMate.",
+        expiresAt: user.subscriptionExpiresAt 
+    });
+});
+
+// 5. KUONA ORODHA YA WATUMIAJI WOTE WALIOPITISHWA NA ADMIN (Discovery)
+app.get('/api/users/discover', (chombo, jibu) => {
+    const users = loadUsers();
+    const now = new Date();
+    
+    const activeUsers = users.filter(u => {
+        if (!u.isPhotoApproved) return false;
+        
+        const hasFreeMsgs = u.freeMessagesLeft > 0;
+        const hasActiveSub = u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > now;
+        
+        return hasFreeMsgs || hasActiveSub;
+    });
+
+    jibu.json(activeUsers);
+});
+
+// 6. KUTUMA LIKE AU KUUNGANISHA NA WHATSAPP
+app.post('/api/like/:userId', (chombo, jibu) => {
+    const users = loadUsers();
+    const targetUserId = parseInt(chombo.params.userId);
+    const targetUser = users.find(u => u.id === targetUserId);
+
+    if (!targetUser) {
+        return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
+    }
+
+    jibu.json({
+        message: `Umemtumia Like ${targetUser.fullName}! Unaweza kuendeleza mazungumzo kupitia WhatsApp yake.`,
+        whatsappNumber: targetUser.whatsappNumber
+    });
+});
+
+// --- NEW CHAT & BOT API ENDPOINTS ---
+
+// Kupata orodha ya bot zote 500 kutoka MongoDB kwa ajili ya Frontend
+app.get('/api/bots', async (chombo, jibu) => {
+    try {
+        const bots = await BotProfile.find({});
+        jibu.status(200).json(bots);
+    } catch (error) {
+        console.error("Hitilafu ya kupata bot:", error);
+        jibu.status(500).json({ error: "Imeshindikana kupata orodha ya bot." });
+    }
+});
+
+// Kutuma ujumbe na kupokea jibu la kiotomatiki kutoka kwa Bot
+app.post('/api/chat', async (chombo, jibu) => {
+    try {
+        const { botId, userMessage, userId } = chombo.body;
+
+        // Hifadhi ujumbe uliotumwa na mtumiaji
+        const userMsgDoc = new Message({
+            sender: userId || 'guest_user',
+            recipient: botId,
+            content: userMessage,
+            isBotResponse: false
         });
+        await userMsgDoc.save();
 
-        await newUser.save();
-        res.status(200).json({ message: 'Umefanikiwa kujisajili!', user: newUser });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Hitilafu kwenye seva.' });
-    }
-});
-
-// 2. API ya Log In
-app.post('/api/login', async (req, res) => {
-    try {
-        const { whatsappNumber } = req.body;
-        if (!whatsappNumber) {
-            return res.status(400).json({ error: 'Tafadhali weka namba ya WhatsApp!' });
+        // Tafuta bot husika kwenye database
+        const bot = await BotProfile.findById(botId);
+        if (!bot) {
+            return jibu.status(404).json({ error: "Bot haipatikani kwenye mfumo." });
         }
 
-        const user = await User.findOne({ whatsappNumber: whatsappNumber.trim() });
-        if (!user) {
-            return res.status(404).json({ error: 'Akaunti yenye namba hii haipo. Tafadhali jisajili kwanza!' });
-        }
+        // Andaa majibu ya kiotomatiki yanayoendana na wasifu wa bot
+        const autoReplies = [
+            `Habari! Mimi ni ${bot.name}. Nimefurahi sana kusikia kutoka kwako leo.`,
+            `Nashukuru kwa ujumbe wako! ${bot.bio} Ungependa tujadili nini zaidi?`,
+            `Hiyo ni nzuri sana! Niambie zaidi kukuhusu mpenzi.`,
+            `Uko vizuri sana! Tutaendelea kupiga stori muda si mrefu, mambo yakoje huko ulipo?`
+        ];
+        const randomReply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
 
-        res.json({ success: true, message: 'Umeingia vizuri!', user });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Hitilafu kwenye seva.' });
-    }
-});
-
-// 3. Discover Users
-app.get('/api/users/discover', async (req, res) => {
-    try {
-        const users = await User.find();
-        const sanitizedUsers = users.map(u => ({
-            id: u.id,
-            fullName: u.fullName,
-            photoUrl: u.photoUrl,
-            lookingFor: u.lookingFor || 'Natafuta uhusiano mzuri',
-            hasUnlockedWhatsApp: u.isPaid
-        }));
-        res.json(sanitizedUsers);
-    } catch (err) {
-        res.status(500).json({ error: 'Hitilafu ya seva.' });
-    }
-});
-
-// 4. Admin Users List
-app.get('/api/admin/users', async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: 'Hitilafu ya seva.' });
-    }
-});
-
-// 5. Kutuma Meseji
-app.post('/api/chat/send', upload.single('imageFile'), async (req, res) => {
-    try {
-        const { senderId, receiverId, messageText } = req.body;
-        const imageFile = req.file;
-
-        let sender = await User.findOne({ id: Number(senderId) });
-        if (!sender) {
-            return res.status(404).json({ error: 'Mtumaji hapatikani kwenye mfumo.' });
-        }
-
-        if (!sender.isPaid) {
-            if (sender.freeMessagesLeft <= 0) {
-                return res.status(403).json({ 
-                    error: 'Meseji zako za bure zimeisha! Tafadhali lipia.',
-                    requiresPayment: true 
-                });
-            }
-            sender.freeMessagesLeft -= 1;
-            await sender.save();
-        }
-
-        let imageUrl = imageFile ? `/uploads/${imageFile.filename}` : null;
-
-        const newMessage = new Message({
-            id: Date.now(),
-            senderId: String(senderId),
-            receiverId: String(receiverId),
-            messageText: messageText || '',
-            imageUrl: imageUrl
+        // Hifadhi jibu la bot kwenye database
+        const botMsgDoc = new Message({
+            sender: botId,
+            recipient: userId || 'guest_user',
+            content: randomReply,
+            isBotResponse: true
         });
+        await botMsgDoc.save();
 
-        await newMessage.save();
-
-        res.json({ 
-            success: true, 
-            message: newMessage, 
-            freeMessagesLeft: sender.freeMessagesLeft,
-            isPaid: sender.isPaid 
+        jibu.status(200).json({ 
+            reply: randomReply, 
+            botName: bot.name,
+            botPicture: bot.profilePicture 
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Hitilafu kwenye seva.' });
+    } catch (error) {
+        console.error("Hitilafu kwenye chat route:", error);
+        jibu.status(500).json({ error: "Imeshindikana kuchakata ujumbe wako." });
     }
 });
 
-// 6. Kusoma Meseji
-app.get('/api/chat/messages/:user1/:user2', async (req, res) => {
-    try {
-        const { user1, user2 } = req.params;
-        const conversation = await Message.find({
-            $or: [
-                { senderId: String(user1), receiverId: String(user2) },
-                { senderId: String(user2), receiverId: String(user1) }
-            ]
-        }).sort({ createdAt: 1 });
-
-        res.json(conversation);
-    } catch (err) {
-        res.status(500).json({ error: 'Hitilafu ya seva.' });
-    }
-});
-
-// 7. Malipo
-app.post('/api/pay', async (req, res) => {
-    try {
-        const { userId } = req.body;
-        const user = await User.findOne({ id: Number(userId) });
-
-        if (!user) return res.status(404).json({ error: 'Mtumiaji hapatikani.' });
-
-        user.isPaid = true;
-        await user.save();
-
-        res.json({ success: true, message: 'Malipo yamefanikiwa!', whatsappNumber: user.whatsappNumber });
-    } catch (err) {
-        res.status(500).json({ error: 'Hitilafu ya seva.' });
-    }
-});
-
-// 8. Admin Futa Mtumiaji
-app.delete('/api/admin/user/:id', async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const deletedUser = await User.findOneAndDelete({ id: Number(userId) });
-
-        if (!deletedUser) {
-            return res.status(404).json({ error: 'Mtumiaji hajapatikana.' });
-        }
-
-        res.json({ success: true, message: 'Akaunti imefutwa kwa mafanikio!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Hitilafu ya seva.' });
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Anzisha Seva kwa ajili ya Render ('0.0.0.0')
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`TanzaniaSoulMate server inafanya kazi kwenye port ${PORT}`);
 });
