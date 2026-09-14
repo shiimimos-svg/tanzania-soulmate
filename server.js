@@ -51,7 +51,7 @@ function saveUsers(users) {
     }
 }
 
-// 1. USAJILI UNAOPOKEA FAILI LA PICHA MOJA KWA MOJA
+// 1. USAJILI UNAOPOKEA FAILI LA PICHA (Picha inapita moja kwa moja bila Admin)
 app.post('/api/signup', upload.single('photoFile'), (chombo, jibu) => {
     const { fullName, whatsappNumber } = chombo.body;
     
@@ -72,7 +72,7 @@ app.post('/api/signup', upload.single('photoFile'), (chombo, jibu) => {
         fullName,
         whatsappNumber,
         photoUrl,
-        isPhotoApproved: false, 
+        isPhotoApproved: true, // Imewekwa true moja kwa moja ili isiongee na Admin
         freeMessagesLeft: 3,    
         subscriptionExpiresAt: null, 
         createdAt: new Date()
@@ -82,7 +82,7 @@ app.post('/api/signup', upload.single('photoFile'), (chombo, jibu) => {
     saveUsers(users);
 
     jibu.status(201).json({
-        message: "Umefanikiwa kujisajili! Subiri Admin ahakiki picha yako.",
+        message: "Umefanikiwa kujisajili! Picha yako imeingia hewani moja kwa moja.",
         user: newUser
     });
 });
@@ -93,7 +93,7 @@ app.get('/api/admin/users', (chombo, jibu) => {
     jibu.json(users);
 });
 
-// 3. KUIDHINISHA PICHA
+// 3. KUIDHINISHA PICHA (Imetunzwa kama Backup)
 app.post('/api/admin/approve-photo/:userId', (chombo, jibu) => {
     const userId = parseInt(chombo.params.userId);
     let users = loadUsers();
@@ -117,10 +117,6 @@ app.post('/api/subscribe/:userId', (chombo, jibu) => {
 
     if (!user) {
         return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
-    }
-
-    if (!user.isPhotoApproved) {
-        return jibu.status(403).json({ error: "Huruhusiwi kulipia mpaka picha yako ihakikiwe na Admin!" });
     }
 
     const expiryDate = new Date();
