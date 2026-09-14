@@ -72,7 +72,7 @@ async function checkSubscription(req, res, next) {
     }
 }
 
-// 1. KUJISAJILI (SIGNUP) - Imerekebishwa kupokea picha na lile chaguo (seeking)
+// 1. KUJISAJILI (SIGNUP) - Picha inapokelewa na kuwekwa approved moja kwa moja (true)
 app.post('/api/signup', (chombo, jibu) => {
     const { fullName, whatsappNumber, photoData, seeking } = chombo.body;
     let users = loadUsers();
@@ -87,8 +87,8 @@ app.post('/api/signup', (chombo, jibu) => {
         fullName,
         whatsappNumber,
         photoUrl: photoData || "https://via.placeholder.com/150",
-        seeking: seeking || "Mchumba", // Hapa tunahifadhi kile anachokitafuta
-        isPhotoApproved: false, 
+        seeking: seeking || "Mchumba",
+        isPhotoApproved: true, // Imewekwa 'true' ili isubiri idhini ya Admin
         freeMessagesLeft: 3,    
         subscriptionExpiresAt: null, 
         createdAt: new Date()
@@ -98,7 +98,7 @@ app.post('/api/signup', (chombo, jibu) => {
     saveUsers(users);
 
     jibu.status(201).json({
-        message: "Umefanikiwa kujisajili! Tafadhali subiri Admin ahakiki picha yako ili uanze kutumia huduma.",
+        message: "Umefanikiwa kujisajili na picha yako imepanda hewani moja kwa moja!",
         user: newUser
     });
 });
@@ -109,34 +109,14 @@ app.get('/api/admin/users', (chombo, jibu) => {
     jibu.json(users);
 });
 
-// 3. KUIDHINISHA PICHA (ADMIN APPROVAL)
-app.post('/api/admin/approve-photo/:userId', (chombo, jibu) => {
-    const userId = parseInt(chombo.params.userId);
-    let users = loadUsers();
-    const user = users.find(u => u.id === userId);
-
-    if (!user) {
-        return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
-    }
-
-    user.isPhotoApproved = true; 
-    saveUsers(users);
-
-    jibu.json({ message: `Picha ya ${user.fullName} imeidhinishwa kikamilifu! Sasa anaweza kuendelea.`, user });
-});
-
-// 4. KUSHUGHULIKIA MALIPO YA TZS 2,000 (Siku 5 za Uhakika)
+// 3. KUSHUGHULIKIA MALIPO YA TZS 2,000 (Siku 5 za Uhakika)
 app.post('/api/subscribe/:userId', (chombo, jibu) => {
     const userId = parseInt(chombo.params.userId);
     let users = loadUsers();
     const user = users.find(u => u.id === userId);
 
     if (!user) {
-        return jibu.status(404).json({ error: "Mtumiaji hajapatikana!" });
-    }
-
-    if (!user.isPhotoApproved) {
-        return jibu.status(403).json({ error: "Huruhusiwi kulipia mpaka picha yako ihakikiwe na Admin kwanza!" });
+        return res.status(404).json({ error: "Mtumiaji hajapatikana!" });
     }
 
     const expiryDate = new Date();
@@ -152,14 +132,12 @@ app.post('/api/subscribe/:userId', (chombo, jibu) => {
     });
 });
 
-// 5. KUONA ORODHA YA WATUMIAJI HALISI WALIOPITISHWA NA ADMIN (Discovery)
+// 5. KUONA ORODHA YA WATUMIAJI WOTE HEWANI (Discovery)
 app.get('/api/users/discover', (chombo, jibu) => {
     const users = loadUsers();
     const now = new Date();
     
     const activeUsers = users.filter(u => {
-        if (!u.isPhotoApproved) return false;
-        
         const hasFreeMsgs = u.freeMessagesLeft > 0;
         const hasActiveSub = u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > now;
         
