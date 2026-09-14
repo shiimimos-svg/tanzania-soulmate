@@ -24,7 +24,7 @@
 
 <div class="container">
     <h2>Dashibodi ya Admin - TanzaniaSoulMate ❤️</h2>
-    <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">Orodha ya watumiaji wote na hali yao ya malipo na meseji.</p>
+    <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">Orodha ya watumiaji wote, malengo yao, na hali yao ya malipo.</p>
     
     <div id="adminUsersList">
         <!-- Orodha ya watumiaji italetwa hapa na JavaScript -->
@@ -56,14 +56,12 @@
                         <div class="details">
                             <h3>${user.fullName}</h3>
                             <p>WhatsApp: <strong>${user.whatsappNumber}</strong></p>
+                            <p>Anachokitafuta: <span style="color: #d81b60; font-weight: bold;">${user.lookingFor || 'Natafuta uhusiano mzuri'}</span></p>
                             <p>Meseji za bure zilizobaki: ${user.freeMessagesLeft !== undefined ? user.freeMessagesLeft : 5}</p>
                         </div>
                     </div>
                     <div>
-                        ${user.isPaid 
-                            <span class="badge paid">Amelipia 💰</span> : 
-                            <span class="badge free">Hajalipia (Free) ⏳</span>
-                        }
+                        ${user.isPaid ? '<span class="badge paid">Amelipia 💰</span>' : '<span class="badge free">Hajalipia (Free) ⏳</span>'}
                     </div>
                 `;
                 listDiv.appendChild(card);
