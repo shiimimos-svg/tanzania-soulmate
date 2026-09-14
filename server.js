@@ -72,9 +72,9 @@ async function checkSubscription(req, res, next) {
     }
 }
 
-// 1. KUJISAJILI (SIGNUP) - Imerekebishwa kupokea picha iliyopakiwa (photoData)
+// 1. KUJISAJILI (SIGNUP) - Imerekebishwa kupokea picha na lile chaguo (seeking)
 app.post('/api/signup', (chombo, jibu) => {
-    const { fullName, whatsappNumber, photoData } = chombo.body;
+    const { fullName, whatsappNumber, photoData, seeking } = chombo.body;
     let users = loadUsers();
 
     const existingUser = users.find(u => u.whatsappNumber === whatsappNumber);
@@ -86,7 +86,8 @@ app.post('/api/signup', (chombo, jibu) => {
         id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
         fullName,
         whatsappNumber,
-        photoUrl: photoData || "https://via.placeholder.com/150", // Inapokea picha halisi ya mtumiaji
+        photoUrl: photoData || "https://via.placeholder.com/150",
+        seeking: seeking || "Mchumba", // Hapa tunahifadhi kile anachokitafuta
         isPhotoApproved: false, 
         freeMessagesLeft: 3,    
         subscriptionExpiresAt: null, 
