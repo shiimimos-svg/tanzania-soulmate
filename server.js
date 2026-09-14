@@ -4,8 +4,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Kuongeza uwezo wa kusoma data kubwa (Base64 ya picha) kwenye JSON requests
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
 const DATA_FILE = path.join(__dirname, 'users.json');
@@ -71,9 +72,9 @@ async function checkSubscription(req, res, next) {
     }
 }
 
-// 1. KUJISAJILI (SIGNUP)
+// 1. KUJISAJILI (SIGNUP) - Imerekebishwa kupokea picha iliyopakiwa (photoData)
 app.post('/api/signup', (chombo, jibu) => {
-    const { fullName, whatsappNumber, photoUrl } = chombo.body;
+    const { fullName, whatsappNumber, photoData } = chombo.body;
     let users = loadUsers();
 
     const existingUser = users.find(u => u.whatsappNumber === whatsappNumber);
@@ -85,7 +86,7 @@ app.post('/api/signup', (chombo, jibu) => {
         id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
         fullName,
         whatsappNumber,
-        photoUrl: photoUrl || "https://via.placeholder.com/150",
+        photoUrl: photoData || "https://via.placeholder.com/150", // Inapokea picha halisi ya mtumiaji
         isPhotoApproved: false, 
         freeMessagesLeft: 3,    
         subscriptionExpiresAt: null, 
