@@ -12,11 +12,13 @@
         .message { padding: 10px 14px; border-radius: 10px; max-width: 75%; font-size: 14px; word-break: break-word; }
         .message.sent { background: #d81b60; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
         .message.received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
-        .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
-        .chat-input-area button { background: #d81b60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; max-height: 200px; object-fit: cover; }
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px; align-items: center; }
+        .chat-input-area input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
+        .file-upload-btn { background: #f0f0f0; border: 1px solid #ddd; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .file-upload-btn:hover { background: #e0e0e0; }
+        .chat-input-area button.send-btn { background: #d81b60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .whatsapp-box { background: #d4edda; color: #155724; padding: 12px; text-align: center; font-weight: bold; display: none; font-size: 14px; border-top: 1px solid #c3e6cb; }
-        .pay-btn { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; font-size: 12px; }
         .back-btn { background: none; border: none; color: white; cursor: pointer; font-size: 14px; font-weight: bold; }
     </style>
 </head>
@@ -38,8 +40,11 @@
     </div>
 
     <div class="chat-input-area" id="inputArea">
-        <input type="text" id="messageInput" placeholder="Andika ujumbe wako hapa...">
-        <button onclick="sendMessage()">Tuma 🚀</button>
+        <label for="imageFile" class="file-upload-btn" title="Ambata Picha">📷</label>
+        <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="previewImageName()">
+        
+        <input type="text" id="messageInput" placeholder="Andika ujumbe au ambata picha...">
+        <button class="send-btn" onclick="sendMessage()">Tuma 🚀</button>
     </div>
 </div>
 
@@ -53,6 +58,14 @@
         window.location.href = 'index.html';
     }
 
+    function previewImageName() {
+        const fileInput = document.getElementById('imageFile');
+        const inputField = document.getElementById('messageInput');
+        if (fileInput.files.length > 0) {
+            inputField.placeholder = `Picha imeteuliwa: ${fileInput.files[0].name}`;
+        }
+    }
+
     async function loadChat() {
         try {
             const res = await fetch(`/api/chat/messages/${senderId}/${receiverId}`);
@@ -64,7 +77,15 @@
             messages.forEach(m => {
                 const div = document.createElement('div');
                 div.className = `message ${m.senderId == senderId ? 'sent' : 'received'}`;
-                div.innerText = m.messageText;
+                
+                let content = '';
+                if (m.messageText) {
+                    content += `<span>${m.messageText}</span>`;
+                }
+                if (m.imageUrl) {
+                    content += `<img src="${m.imageUrl}" alt="Picha ya Chat">`;
+                }
+                div.innerHTML = content;
                 box.appendChild(div);
             });
             box.scrollTop = box.scrollHeight;
@@ -75,19 +96,31 @@
 
     async function sendMessage() {
         const input = document.getElementById('messageInput');
+        const fileInput = document.getElementById('imageFile');
         const text = input.value.trim();
-        if (!text) return;
+        const image = fileInput.files[0];
+
+        if (!text && !image) return;
+
+        const formData = new FormData();
+        formData.append('senderId', senderId);
+        formData.append('receiverId', receiverId);
+        formData.append('messageText', text);
+        if (image) {
+            formData.append('imageFile', image);
+        }
 
         try {
             const res = await fetch('/api/chat/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderId, receiverId, messageText: text })
+                body: formData
             });
             const data = await res.json();
 
             if (res.ok) {
                 input.value = '';
+                fileInput.value = '';
+                input.placeholder = 'Andika ujumbe au ambata picha...';
                 document.getElementById('msgCount').innerText = `Meseji: ${data.freeMessagesLeft}`;
                 loadChat();
 
@@ -125,7 +158,7 @@
         document.getElementById('whatsappReveal').style.display = 'block';
     }
 
-    setInterval(loadChat, 3000); // Kuangalia ujumbe mpya kila baada ya sekunde 3
+    setInterval(loadChat, 3000);
     loadChat();
 </script>
 
