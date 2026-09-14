@@ -3,164 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Chati na Mwenza</title>
+    <title>Mazungumzo - TanzaniaSoulMate</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
-        .chat-container { width: 100%; max-width: 500px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 85vh; overflow: hidden; }
-        .chat-header { background: #d81b60; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
-        .message { padding: 10px 14px; border-radius: 10px; max-width: 75%; font-size: 14px; word-break: break-word; }
-        .message.sent { background: #d81b60; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .message.received { background: #e0e0e0; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; max-height: 200px; object-fit: cover; }
-        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px; align-items: center; }
-        .chat-input-area input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
-        .file-upload-btn { background: #f0f0f0; border: 1px solid #ddd; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .file-upload-btn:hover { background: #e0e0e0; }
-        .chat-input-area button.send-btn { background: #d81b60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .whatsapp-box { background: #d4edda; color: #155724; padding: 12px; text-align: center; font-weight: bold; display: none; font-size: 14px; border-top: 1px solid #c3e6cb; }
-        .back-btn { background: none; border: none; color: white; cursor: pointer; font-size: 14px; font-weight: bold; }
+        body {
+            background: #fff0f3;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        header h2 {
+            margin: 0;
+            color: #d63384;
+            font-size: 18px;
+        }
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .user-msg {
+            background: #d63384;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .bot-msg {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .chat-input-area {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+        }
+        .chat-input-area button {
+            background: #d63384;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
 
-<div class="chat-container">
-    <div class="chat-header">
-        <button class="back-btn" onclick="window.location.href='discover.html'">⬅ Rudi</button>
-        <span id="chatTitle">Mazungumzo ❤️</span>
-        <span id="msgCount" style="font-size: 12px; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">Meseji: 5</span>
+    <header>
+        <button class="back-btn" onclick="window.location.href='discover.html'">⬅</button>
+        <img id="botAvatar" src="" alt="Bot">
+        <div>
+            <h2 id="botName">Inapakia...</h2>
+            <span style="font-size: 11px; color: #28a745;">🟢 Mtandaoni</span>
+        </div>
+    </header>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="message bot-msg">Habari! Karibu sana tupige stori. Ungependa tujadili nini leo?</div>
     </div>
 
-    <div class="chat-messages" id="messagesBox">
-        <!-- Meseji zitaletwa hapa -->
+    <div class="chat-input-area">
+        <input type="text" id="messageInput" placeholder="Andika ujumbe wako hapa..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Tuma</button>
     </div>
 
-    <div id="whatsappReveal" class="whatsapp-box">
-        Namba ya WhatsApp: <span id="waNumber">07XXXXXXXX</span>
-    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const botId = urlParams.get('botId');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-    <div class="chat-input-area" id="inputArea">
-        <label for="imageFile" class="file-upload-btn" title="Ambata Picha">📷</label>
-        <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="previewImageName()">
-        
-        <input type="text" id="messageInput" placeholder="Andika ujumbe au ambata picha...">
-        <button class="send-btn" onclick="sendMessage()">Tuma 🚀</button>
-    </div>
-</div>
-
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const receiverId = urlParams.get('id');
-    const senderId = localStorage.getItem('userId');
-
-    if (!senderId) {
-        alert('Tafadhali jisajili kwanza!');
-        window.location.href = 'index.html';
-    }
-
-    function previewImageName() {
-        const fileInput = document.getElementById('imageFile');
-        const inputField = document.getElementById('messageInput');
-        if (fileInput.files.length > 0) {
-            inputField.placeholder = `Picha imeteuliwa: ${fileInput.files[0].name}`;
+        if (!currentUser) {
+            alert('Tafadhali ingia kwanza!');
+            window.location.href = 'login.html';
         }
-    }
 
-    async function loadChat() {
-        try {
-            const res = await fetch(`/api/chat/messages/${senderId}/${receiverId}`);
-            const messages = await res.json();
-            
-            const box = document.getElementById('messagesBox');
-            box.innerHTML = '';
-
-            messages.forEach(m => {
-                const div = document.createElement('div');
-                div.className = `message ${m.senderId == senderId ? 'sent' : 'received'}`;
-                
-                let content = '';
-                if (m.messageText) {
-                    content += `<span>${m.messageText}</span>`;
+        // Pakia taarifa za bot husika kwenye header
+        async function loadBotInfo() {
+            try {
+                const res = await fetch('/api/bots');
+                const bots = await res.json();
+                const currentBot = bots.find(b => b._id === botId);
+                if (currentBot) {
+                    document.getElementById('botName').innerText = currentBot.name;
+                    document.getElementById('botAvatar').src = currentBot.profilePicture;
                 }
-                if (m.imageUrl) {
-                    content += `<img src="${m.imageUrl}" alt="Picha ya Chat">`;
-                }
-                div.innerHTML = content;
-                box.appendChild(div);
-            });
-            box.scrollTop = box.scrollHeight;
-        } catch (err) {
-            console.error('Hitilafu ya kupakia meseji:', err);
-        }
-    }
-
-    async function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const fileInput = document.getElementById('imageFile');
-        const text = input.value.trim();
-        const image = fileInput.files[0];
-
-        if (!text && !image) return;
-
-        const formData = new FormData();
-        formData.append('senderId', senderId);
-        formData.append('receiverId', receiverId);
-        formData.append('messageText', text);
-        if (image) {
-            formData.append('imageFile', image);
-        }
-
-        try {
-            const res = await fetch('/api/chat/send', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                input.value = '';
-                fileInput.value = '';
-                input.placeholder = 'Andika ujumbe au ambata picha...';
-                document.getElementById('msgCount').innerText = `Meseji: ${data.freeMessagesLeft}`;
-                loadChat();
-
-                if (data.isPaid) {
-                    revealWhatsApp(data.whatsappNumber);
-                }
-            } else if (data.requiresPayment) {
-                alert(data.error);
-                triggerPaymentPrompt();
-            } else {
-                alert(data.error || 'Imeshindwa kutuma.');
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function triggerPaymentPrompt() {
-        if (confirm("Meseji zako za bure zimeisha! Je, unataka kulipia ili kufungua namba ya WhatsApp ya mshirika huyu?")) {
-            const res = await fetch('/api/pay', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: senderId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(data.message);
-                revealWhatsApp(data.whatsappNumber);
+            } catch (err) {
+                console.error("Hitilafu ya kupata taarifa za bot:", err);
             }
         }
-    }
 
-    function revealWhatsApp(number) {
-        document.getElementById('waNumber').innerText = number;
-        document.getElementById('whatsappReveal').style.display = 'block';
-    }
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messageText = input.value.trim();
+            if (!messageText) return;
 
-    setInterval(loadChat, 3000);
-    loadChat();
-</script>
+            const container = document.getElementById('chatContainer');
 
+            // Weka ujumbe wa mtumiaji kwenye screen
+            container.innerHTML += `<div class="message user-msg">${messageText}</div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        botId: botId,
+                        userMessage: messageText,
+                        userId: currentUser.id || currentUser._id
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    // Weka jibu la bot kwenye screen
+                    container.innerHTML += `<div class="message bot-msg">${data.reply}</div>`;
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    alert(data.error || 'Imeshindikana kutuma ujumbe.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Hitilafu ya mtandao.');
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        if (botId) {
+            loadBotInfo();
+        }
+    </script>
 </body>
 </html>
