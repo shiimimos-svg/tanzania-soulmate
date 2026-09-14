@@ -3,157 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Ingia au Jisajili</title>
+    <title>TanzaniaSoulMate - Find Your Heart in Tanzania</title>
     <style>
+        :root {
+            --primary: #d63384;
+            --primary-hover: #c02974;
+            --text-dark: #111827;
+            --text-muted: #4b5563;
+            --bg-light: #fff0f3;
+        }
+
         body {
-            background: #fff0f3;
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            background-color: #ffffff;
+        }
+
+        /* Navbar */
+        header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-login {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            padding: 8px 16px;
+            font-size: 15px;
+        }
+
+        .btn-signup {
+            text-decoration: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        .btn-signup:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: calc(100vh - 81px);
+            background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            padding: 0 80px;
+        }
+
+        .hero-content {
+            max-width: 650px;
+            color: white;
+        }
+
+        .hero-badge {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #ff85a1;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            line-height: 1.1;
+            margin: 0 0 20px 0;
+            font-weight: 800;
+        }
+
+        .hero h1 span {
+            color: #ff4d6d;
+        }
+
+        .hero p {
+            font-size: 18px;
+            line-height: 1.5;
+            color: #f3f4f6;
+            margin-bottom: 30px;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: background 0.2s, transform 0.1s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hero-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Modal Overlay for Login / Signup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            z-index: 2000;
         }
-        .card {
+
+        .modal-card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 16px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
             box-sizing: border-box;
-            margin: 20px;
         }
-        h2 {
-            color: #d63384;
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+            background: none;
+            border: none;
+        }
+
+        .modal-card h2 {
+            color: var(--primary);
             text-align: center;
-            margin-bottom: 20px;
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-size: 24px;
         }
+
         .tabs {
             display: flex;
             margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid #f3f4f6;
         }
+
         .tab {
             flex: 1;
             text-align: center;
             padding: 10px;
             cursor: pointer;
-            font-weight: bold;
-            color: #777;
+            font-weight: 600;
+            color: var(--text-muted);
         }
+
         .tab.active {
-            color: #d63384;
-            border-bottom: 2px solid #d63384;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
             margin-bottom: -2px;
         }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #444;
+            margin-bottom: 6px;
+            color: var(--text-dark);
             font-size: 14px;
+            font-weight: 500;
         }
+
         input, select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             box-sizing: border-box;
+            font-size: 15px;
         }
-        button {
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-submit {
             width: 100%;
-            background: #d63384;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 16px;
             margin-top: 10px;
         }
-        button:hover {
-            background: #c02974;
+
+        .modal-submit:hover {
+            background: var(--primary-hover);
         }
+
         .form-section {
             display: none;
         }
+
         .form-section.active {
             display: block;
         }
+
         .msg {
             text-align: center;
             margin-top: 15px;
             font-size: 14px;
-            word-break: break-word;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            .nav-links { display: none; }
+            .hero { padding: 0 20px; }
+            .hero h1 { font-size: 38px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>TanzaniaSoulMate ❤️</h2>
-        
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('login')">Ingia (Login)</div>
-            <div class="tab" onclick="switchTab('signup')">Jisajili (Sign Up)</div>
+    <!-- Navbar -->
+    <header>
+        <a href="#" class="logo">❤️ Tanzania<span>SoulMate</span></a>
+        <ul class="nav-links">
+            <li><a href="#" onclick="openModal('login')">Discover</a></li>
+            <li><a href="#" onclick="openModal('login')">Messages</a></li>
+            <li><a href="#" onclick="openModal('login')">Pricing</a></li>
+        </ul>
+        <div class="auth-buttons">
+            <a href="#" class="btn-login" onclick="openModal('login')">Login</a>
+            <a href="#" class="btn-signup" onclick="openModal('signup')">Sign Up</a>
         </div>
+    </header>
 
-        <!-- LOGIN FORM -->
-        <div id="loginSection" class="form-section active">
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label>Namba ya WhatsApp</label>
-                    <input type="text" id="loginPhone" placeholder="Mfano: 0712345678" required>
-                </div>
-                <button type="submit">Ingia Kwenye Akaunti</button>
-            </form>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">MADE FOR CONNECTIONS IN TANZANIA</div>
+            <h1>Find Your Heart in Tanzania ❤️</h1>
+            <p>Meet genuine people. Connect. Chat. Build something real.</p>
+            <button class="hero-btn" onclick="openModal('signup')">Jiunge na TanzaniaSoulMate &rarr;</button>
         </div>
+    </section>
 
-        <!-- SIGNUP FORM -->
-        <div id="signupSection" class="form-section">
-            <form id="signupForm" onsubmit="handleSignup(event)">
-                <div class="form-group">
-                    <label>Jina Lako Kamili</label>
-                    <input type="text" id="signupName" placeholder="Andika jina lako" required>
-                </div>
-                <div class="form-group">
-                    <label>Namba ya WhatsApp</label>
-                    <input type="text" id="signupPhone" placeholder="Mfano: 0712345678" required>
-                </div>
-                <div class="form-group">
-                    <label>Unatafuta Nini?</label>
-                    <select id="signupSeeking" required>
-                        <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
-                        <option value="Urafiki Tu">Urafiki Tu</option>
-                        <option value="Mahusiano ya Kawaida">Mahusiano ya Kawaida</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Chagua Picha Yako (Upload Photo)</label>
-                    <input type="file" id="signupPhotoFile" accept="image/*" required>
-                </div>
-                <button type="submit">Jisajili Sasa</button>
-            </form>
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2>TanzaniaSoulMate ❤️</h2>
+            
+            <div class="tabs">
+                <div id="loginTabBtn" class="tab active" onclick="switchTab('login')">Ingia (Login)</div>
+                <div id="signupTabBtn" class="tab" onclick="switchTab('signup')">Jisajili (Sign Up)</div>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginSection" class="form-section active">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Namba ya WhatsApp</label>
+                        <input type="text" id="loginPhone" placeholder="Mfano: 0712345678" required>
+                    </div>
+                    <button type="submit" class="modal-submit">Ingia Kwenye Akaunti</button>
+                </form>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signupSection" class="form-section">
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label>Jina Lako Kamili</label>
+                        <input type="text" id="signupName" placeholder="Andika jina lako" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Namba ya WhatsApp</label>
+                        <input type="text" id="signupPhone" placeholder="Mfano: 0712345678" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unatafuta Nini?</label>
+                        <select id="signupSeeking" required>
+                            <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
+                            <option value="Urafiki Tu">Urafiki Tu</option>
+                            <option value="Mahusiano ya Kawaida">Mahusiano ya Kawaida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Chagua Picha Yako (Upload Photo)</label>
+                        <input type="file" id="signupPhotoFile" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="modal-submit">Jisajili Sasa</button>
+                </form>
+            </div>
+
+            <div id="message" class="msg"></div>
         </div>
-
-        <div id="message" class="msg"></div>
     </div>
 
     <script>
+        function openModal(tabName) {
+            document.getElementById('authModal').style.display = 'flex';
+            switchTab(tabName);
+        }
+
+        function closeModal() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('message').innerText = '';
+        }
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
 
             if (tabName === 'login') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginTabBtn').classList.add('active');
                 document.getElementById('loginSection').classList.add('active');
             } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('signupTabBtn').classList.add('active');
                 document.getElementById('signupSection').classList.add('active');
             }
             document.getElementById('message').innerText = '';
@@ -192,7 +428,7 @@
                     if (res.ok) {
                         msgDiv.style.color = 'green';
                         msgDiv.innerText = data.message;
-                        setTimeout(() => switchTab('login'), 3000);
+                        setTimeout(() => switchTab('login'), 2500);
                     } else {
                         msgDiv.style.color = 'red';
                         msgDiv.innerText = data.error;
@@ -218,10 +454,10 @@
                 if (user) {
                     localStorage.setItem('currentUser', JSON.stringify(user));
                     msgDiv.style.color = 'green';
-                    msgDiv.innerText = "Umeingia kwa mafanikio! Unapelekwa kwenye ukurasa mkuu...";
+                    msgDiv.innerText = "Umeingia kwa mafanikio! Unapelekwa...";
                     setTimeout(() => {
                         window.location.href = 'discover.html';
-                    }, 1500);
+                    }, 1200);
                 } else {
                     msgDiv.style.color = 'red';
                     msgDiv.innerText = "Namba hii haijapatikana. Tafadhali jisajili kwanza.";
@@ -229,6 +465,14 @@
             } catch (err) {
                 msgDiv.style.color = 'red';
                 msgDiv.innerText = "Hitilafu imetokea wakati wa kuingia.";
+            }
+        }
+
+        // Close modal when clicking outside of card
+        window.onclick = function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                closeModal();
             }
         }
     </script>
