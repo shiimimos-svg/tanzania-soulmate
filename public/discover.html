@@ -19,11 +19,35 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         h2 {
             color: #d63384;
             margin: 0;
+        }
+        .user-info {
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn {
+            background: #d63384;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
         }
         .logout-btn {
             background: #dc3545;
@@ -33,9 +57,6 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-        }
-        .logout-btn:hover {
-            background: #c82333;
         }
         .grid {
             display: grid;
@@ -60,11 +81,6 @@
             margin: 10px 0 5px;
             color: #333;
         }
-        .card p {
-            color: #666;
-            font-size: 14px;
-            margin: 0 0 15px;
-        }
         .seeking-badge {
             display: inline-block;
             background: #fff0f3;
@@ -76,7 +92,7 @@
             margin-bottom: 10px;
         }
         .card button {
-            background: #25d366;
+            background: #d63384;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -85,7 +101,7 @@
             font-weight: bold;
         }
         .card button:hover {
-            background: #1ebe5d;
+            background: #b0266b;
         }
         .no-users {
             text-align: center;
@@ -99,19 +115,39 @@
 
     <div class="container">
         <div class="header-bar">
-            <h2>Watumiaji Halisi Waliopo Hewani ❤️</h2>
-            <button class="logout-btn" onclick="handleLogout()">Toka (Log Out)</button>
+            <h2>TanzaniaSoulMate ❤️</h2>
+            <div id="userStatus" class="user-info">Inapakia taarifa zako...</div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="paySubscription()">Lipa TZS 2,000 (Siku 5)</button>
+                <button class="logout-btn" onclick="handleLogout()">Toka (Log Out)</button>
+            </div>
         </div>
 
-        <div class="grid" id="userGrid">
-            <!-- Watumiaji wataingizwa hapa kupitia JavaScript -->
-        </div>
+        <div class="grid" id="userGrid"></div>
         <div id="noUsersMessage" class="no-users" style="display: none;">
-            Hakuna watumiaji waliopo hewani kwa sasa. Tafadhali subiri au jisajili!
+            Hakuna watumiaji waliyojiunga kwa sasa.
         </div>
     </div>
 
     <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        function updateStatusDisplay() {
+            const statusDiv = document.getElementById('userStatus');
+            const now = new Date();
+            const hasActiveSub = currentUser.subscriptionExpiresAt && new Date(currentUser.subscriptionExpiresAt) > now;
+
+            if (hasActiveSub) {
+                statusDiv.innerHTML = `Akaunti Yako: <span style="color: green;">VIP (Siku 5)</span>`;
+            } else {
+                statusDiv.innerHTML = `Ujumbe wa Bure Uliobakia: <span style="color: #d63384; font-weight: bold;">${currentUser.freeMessagesLeft} / 5</span>`;
+            }
+        }
+
         async function loadDiscoverUsers() {
             try {
                 const response = await fetch('/api/users/discover');
@@ -121,33 +157,61 @@
                 const noUsersMsg = document.getElementById('noUsersMessage');
                 grid.innerHTML = '';
 
-                if (users.length === 0) {
+                // Kuzuia mtumiaji kujiona mwenyewe kwenye list
+                const otherUsers = users.filter(u => u.id !== currentUser.id);
+
+                if (otherUsers.length === 0) {
                     noUsersMsg.style.display = 'block';
                     return;
                 }
 
                 noUsersMsg.style.display = 'none';
 
-                users.forEach(user => {
+                otherUsers.forEach(user => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
                         <img src="${user.photoUrl}" alt="${user.fullName}">
                         <h3>${user.fullName}</h3>
                         <div class="seeking-badge">Anatafuta: ${user.seeking || 'Mchumba'}</div>
-                        <p>Mwanachama Halisi</p>
-                        <button onclick="connectWhatsApp('${user.whatsappNumber}', '${user.fullName}')">Unganisha WhatsApp</button>
+                        <br>
+                        <button onclick="startChat(${user.id}, '${user.fullName}')">Anzisha Mazungumzo</button>
                     `;
                     grid.appendChild(card);
                 });
+
+                updateStatusDisplay();
             } catch (err) {
                 console.error("Hitilafu ya kupata watumiaji:", err);
             }
         }
 
-        function connectWhatsApp(number, name) {
-            const url = `https://wa.me/${number}?text=Habari%20${name},%20nimekuona%20kupitia%20TanzaniaSoulMate!`;
-            window.open(url, '_blank');
+        function startChat(targetId, targetName) {
+            window.location.href = `chat.html?id=${targetId}&name=${encodeURIComponent(targetName)}`;
+        }
+
+        async function paySubscription() {
+            if (!confirm("Je, ungependa kulipa TZS 2,000 ili uwe na siku 5 za kuchati na kuona ujumbe wote?")) return;
+
+            try {
+                const res = await fetch(`/api/subscribe/${currentUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    currentUser.subscriptionExpiresAt = data.expiresAt;
+                    currentUser.freeMessagesLeft = 0;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    alert(data.message);
+                    updateStatusDisplay();
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) {
+                alert("Hitilafu ya malipo imetokea.");
+            }
         }
 
         function handleLogout() {
