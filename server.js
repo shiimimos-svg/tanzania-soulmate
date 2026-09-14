@@ -50,12 +50,17 @@ app.post('/api/signup', (req, res) => {
     res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI
+// 2. KUPATA ORODHA YA WATUMIAJI (Inatumika na Login pia)
+app.get('/api/admin/users', (req, res) => {
+    res.json(loadData(DATA_FILE, []));
+});
+
+// 3. KUPATA ORODHA YA DISCOVERY
 app.get('/api/users/discover', (req, res) => {
     res.json(loadData(DATA_FILE, []));
 });
 
-// 3. KUPATA MAZUNGUMZO KATI YA WATU WAWILI
+// 4. KUPATA MAZUNGUMZO KATI YA WATU WAWILI
 app.get('/api/chat/:user1/:user2', (req, res) => {
     const { user1, user2 } = req.params;
     let messages = loadData(MESSAGES_FILE, []);
@@ -64,7 +69,6 @@ app.get('/api/chat/:user1/:user2', (req, res) => {
     const sender = users.find(u => u.id == user1);
     const now = new Date();
     
-    // Angalia kama ana ruhusa (anayo free messages au active subscription)
     const hasFreeMsgs = sender && sender.freeMessagesLeft > 0;
     const hasActiveSub = sender && sender.subscriptionExpiresAt && new Date(sender.subscriptionExpiresAt) > now;
     const isAllowed = hasFreeMsgs || hasActiveSub;
@@ -81,7 +85,7 @@ app.get('/api/chat/:user1/:user2', (req, res) => {
     });
 });
 
-// 4. KUTUMA UJUMBE NDANI YA MFUMO
+// 5. KUTUMA UJUMBE NDANI YA MFUMO
 app.post('/api/chat/send', (req, res) => {
     const { senderId, receiverId, text } = req.body;
     let users = loadData(DATA_FILE, []);
@@ -101,7 +105,6 @@ app.post('/api/chat/send', (req, res) => {
         });
     }
 
-    // Punguza ujumbe wa bure kama hana sub active
     if (!hasActiveSub && hasFreeMsgs) {
         sender.freeMessagesLeft -= 1;
         saveData(DATA_FILE, users);
@@ -125,7 +128,7 @@ app.post('/api/chat/send', (req, res) => {
     });
 });
 
-// 5. KULIPIA TZS 2,000 (Siku 5)
+// 6. KULIPIA TZS 2,000 (Siku 5)
 app.post('/api/subscribe/:userId', (req, res) => {
     const userId = parseInt(req.params.userId);
     let users = loadData(DATA_FILE, []);
