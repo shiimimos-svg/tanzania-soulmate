@@ -8,7 +8,9 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff0f5; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; text-align: center; }
         h2 { color: #d81b60; margin-bottom: 5px; }
-        p.subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
+        p.subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .filter-box { margin-bottom: 20px; }
+        .filter-box select { padding: 10px; border-radius: 8px; border: 1px solid #d81b60; font-size: 14px; outline: none; width: 100%; max-width: 350px; background: white; color: #333; }
         .grid { display: flex; flex-direction: column; gap: 20px; padding: 10px 0; }
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .card img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #d81b60; }
@@ -24,8 +26,18 @@
 
 <div class="container">
     <h2>Watu Waliopo Hewani ❤️</h2>
-    <p class="subtitle">Soma kwanza kile mwezako anachokitafuta kabla ya kuanza mazungumzo!</p>
+    <p class="subtitle">Chuja au soma kile mwezako anachokitafuta kabla ya kuanza mazungumzo!</p>
     
+    <div class="filter-box">
+        <select id="intentionFilter" onchange="filterUsers()">
+            <option value="ALL">🔍 Onyesha Wote Waliopo</option>
+            <option value="Natafuta Ndoa ya Kudumu 💍">Natafuta Ndoa ya Kudumu 💍</option>
+            <option value="Natafuta Mwenza wa Kuchati na Kufahamiana 💬">Natafuta Mwenza wa Kuchati na Kufahamiana 💬</option>
+            <option value="Natafuta Uhusiano wa Kifedha / Support 🤝">Natafuta Uhusiano wa Kifedha / Support 🤝</option>
+            <option value="Natafuta Rafiki wa Kustarehe naye 🌴">Natafuta Rafiki wa Kustarehe naye 🌴</option>
+        </select>
+    </div>
+
     <div id="usersGrid" class="grid">
         <!-- Orodha ya watumiaji italetwa hapa na JavaScript -->
     </div>
@@ -34,40 +46,55 @@
 </div>
 
 <script>
+    let allFetchedUsers = [];
+
     async function loadDiscoverUsers() {
         try {
             const res = await fetch('/api/users/discover');
-            const users = await res.json();
+            allFetchedUsers = await res.json();
             
-            const currentUserId = localStorage.getItem('userId');
-            const grid = document.getElementById('usersGrid');
-            grid.innerHTML = '';
-
-            // Tunajichuja wenyewe ili tusijionyeshe kwenye orodha yetu wenyewe
-            const otherUsers = users.filter(u => u.id != currentUserId);
-
-            if (otherUsers.length === 0) {
-                grid.innerHTML = '<p style="color: #666;">Hakuna wenza bado kwa sasa. Jisajili uwe wa kwanza!</p>';
-                return;
-            }
-
-            otherUsers.forEach(user => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <img src="${user.photoUrl}" alt="${user.fullName}">
-                    <h3>${user.fullName}</h3>
-                    <div class="intention-badge">
-                        🎯 Anachokitafuta: ${user.lookingFor || 'Natafuta uhusiano mzuri'}
-                    </div>
-                    <a href="chat.html?id=${user.id}" class="btn-chat">
-                        Anzisha Mazungumzo 💬
-                    </a>
-                `;
-                grid.appendChild(card);
-            });
+            displayUsers(allFetchedUsers);
         } catch (err) {
             console.error('Imeshindwa kupakia wenza:', err);
+        }
+    }
+
+    function displayUsers(usersList) {
+        const currentUserId = localStorage.getItem('userId');
+        const grid = document.getElementById('usersGrid');
+        grid.innerHTML = '';
+
+        const otherUsers = usersList.filter(u => u.id != currentUserId);
+
+        if (otherUsers.length === 0) {
+            grid.innerHTML = '<p style="color: #666;">Hakuna wenza waliopatikana kwa uchaguzi huu.</p>';
+            return;
+        }
+
+        otherUsers.forEach(user => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="${user.photoUrl}" alt="${user.fullName}">
+                <h3>${user.fullName}</h3>
+                <div class="intention-badge">
+                    🎯 ${user.lookingFor || 'Natafuta uhusiano mzuri'}
+                </div>
+                <a href="chat.html?id=${user.id}" class="btn-chat">
+                    Anzisha Mazungumzo 💬
+                </a>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function filterUsers() {
+        const selectedValue = document.getElementById('intentionFilter').value;
+        if (selectedValue === 'ALL') {
+            displayUsers(allFetchedUsers);
+        } else {
+            const filtered = allFetchedUsers.filter(u => u.lookingFor === selectedValue);
+            displayUsers(filtered);
         }
     }
 
