@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
         .card {
             background: white;
@@ -23,6 +23,7 @@
             width: 100%;
             max-width: 400px;
             box-sizing: border-box;
+            margin: 20px;
         }
         h2 {
             color: #d63384;
@@ -88,6 +89,7 @@
             text-align: center;
             margin-top: 15px;
             font-size: 14px;
+            word-break: break-word;
         }
     </style>
 </head>
@@ -112,7 +114,7 @@
             </form>
         </div>
 
-        <!-- SIGNUP FORM -->
+        <!-- SIGNUP FORM (YENYE UPLOAD YA PICHA) -->
         <div id="signupSection" class="form-section">
             <form id="signupForm" onsubmit="handleSignup(event)">
                 <div class="form-group">
@@ -124,8 +126,8 @@
                     <input type="text" id="signupPhone" placeholder="Mfano: 0712345678" required>
                 </div>
                 <div class="form-group">
-                    <label>Link ya Picha Yako (Photo URL)</label>
-                    <input type="text" id="signupPhoto" placeholder="Weka kiungo cha picha yako" required>
+                    <label>Chagua Picha Yako (Upload Photo)</label>
+                    <input type="file" id="signupPhotoFile" accept="image/*" required>
                 </div>
                 <button type="submit">Jisajili Sasa</button>
             </form>
@@ -153,29 +155,45 @@
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
             const whatsappNumber = document.getElementById('signupPhone').value;
-            const photoUrl = document.getElementById('signupPhoto').value;
+            const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
 
-            try {
-                const res = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fullName, whatsappNumber, photoUrl })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    msgDiv.style.color = 'green';
-                    msgDiv.innerText = data.message;
-                    setTimeout(() => switchTab('login'), 3000);
-                } else {
-                    msgDiv.style.color = 'red';
-                    msgDiv.innerText = data.error;
-                }
-            } catch (err) {
+            if (!photoFile) {
                 msgDiv.style.color = 'red';
-                msgDiv.innerText = "Hitilafu ya mtandao. Jaribu tena.";
+                msgDiv.innerText = "Tafadhali chagua picha yako kwanza!";
+                return;
             }
+
+            msgDiv.style.color = 'blue';
+            msgDiv.innerText = "Inapakia picha yako, tafadhali subiri...";
+
+            // Badilisha picha kuwa Base64 ili itumwe kwa urahisi kwenye server
+            const reader = new FileReader();
+            reader.readAsDataURL(photoFile);
+            reader.onload = async function () {
+                const photoData = reader.result;
+
+                try {
+                    const res = await fetch('/api/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fullName, whatsappNumber, photoData })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        msgDiv.style.color = 'green';
+                        msgDiv.innerText = data.message;
+                        setTimeout(() => switchTab('login'), 3000);
+                    } else {
+                        msgDiv.style.color = 'red';
+                        msgDiv.innerText = data.error;
+                    }
+                } catch (err) {
+                    msgDiv.style.color = 'red';
+                    msgDiv.innerText = "Hitilafu ya mtandao wakati wa kujisajili. Jaribu tena.";
+                }
+            };
         }
 
         async function handleLogin(e) {
@@ -184,7 +202,6 @@
             const msgDiv = document.getElementById('message');
 
             try {
-                // Tunatumbukiza ukaguzi wa watumiaji kupitia api ya discover au admin
                 const res = await fetch('/api/admin/users');
                 const users = await res.json();
                 
