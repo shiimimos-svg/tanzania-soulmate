@@ -59,11 +59,11 @@ app.post('/api/signup', upload.single('photoFile'), (req, res) => {
         const photoUrl = `/uploads/${photoFile.filename}`;
 
         const newUser = {
-            id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
+            id: users.length > 0 ? Number(users[users.length - 1].id) + 1 : 1,
             fullName,
             whatsappNumber,
             photoUrl,
-            lookingFor: lookingFor || 'Natafuta uhusiano mzuri', // Hapa tunahifadhi lengo lake
+            lookingFor: lookingFor || 'Natafuta uhusiano mzuri',
             isPhotoApproved: true,
             freeMessagesLeft: 5, 
             isPaid: false,       
@@ -99,14 +99,27 @@ app.get('/api/admin/users', (req, res) => {
     res.json(users);
 });
 
-// 4. API ya Kutuma Meseji za Ndani ya Mfumo (Chat)
+// 4. API ya Kutuma Meseji za Ndani ya Mfumo (Inaruhusu meseji kwenda hata kama mtu Hayupo Hewani)
 app.post('/api/chat/send', (req, res) => {
     const { senderId, receiverId, messageText } = req.body;
     const messages = readData(messagesFile);
     const users = readData(usersFile);
 
-    const sender = users.find(u => u.id == senderId);
-    if (!sender) return res.status(404).json({ error: 'Mtumaji hajapatikana.' });
+    // Tunatafuta mtumaji kwa kulinganisha ID zao (bila kujali kama ni string au number)
+    let sender = users.find(u => String(u.id) === String(senderId));
+    
+    // Kama mtumaji hana rekodi, tunamtengenezea ya muda ili asikwame
+    if (!sender) {
+        sender = {
+            id: senderId,
+            fullName: "Mtumiaji",
+            whatsappNumber: "0700000000",
+            freeMessagesLeft: 5,
+            isPaid: false
+        };
+        users.push(sender);
+        saveData(usersFile, users);
+    }
 
     if (!sender.isPaid) {
         if (sender.freeMessagesLeft <= 0) {
@@ -121,8 +134,8 @@ app.post('/api/chat/send', (req, res) => {
 
     const newMessage = {
         id: Date.now(),
-        senderId,
-        receiverId,
+        senderId: String(senderId),
+        receiverId: String(receiverId),
         messageText,
         createdAt: new Date()
     };
@@ -133,19 +146,19 @@ app.post('/api/chat/send', (req, res) => {
     res.json({ 
         success: true, 
         message: newMessage, 
-        freeMessagesLeft: sender.freeMessagesLeft,
-        isPaid: sender.isPaid 
+        freeMessagesLeft: sender.freeMessagesLeft !== undefined ? sender.freeMessagesLeft : 5,
+        isPaid: sender.isPaid || false 
     });
 });
 
-// 5. API ya Kusoma Meseji baina ya Wawili
+// 5. API ya Kusoma Meseji baina ya Wawili (Inazihifadhi zote ili wakirudi wazikute)
 app.get('/api/chat/messages/:user1/:user2', (req, res) => {
     const { user1, user2 } = req.params;
     const messages = readData(messagesFile);
 
     const conversation = messages.filter(m => 
-        (m.senderId == user1 && m.receiverId == user2) || 
-        (m.senderId == user2 && m.receiverId == user1)
+        (String(m.senderId) === String(user1) && String(m.receiverId) === String(user2)) || 
+        (String(m.senderId) === String(user2) && String(m.receiverId) === String(user1))
     );
 
     res.json(conversation);
@@ -155,7 +168,7 @@ app.get('/api/chat/messages/:user1/:user2', (req, res) => {
 app.post('/api/pay', (req, res) => {
     const { userId } = req.body;
     const users = readData(usersFile);
-    const user = users.find(u => u.id == userId);
+    const user = users.find(u => String(u.id) === String(userId));
 
     if (!user) return res.status(404).json({ error: 'Mtumaji hapatikani.' });
 
