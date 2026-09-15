@@ -16,8 +16,7 @@ function loadData(filePath, defaultVal) {
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, JSON.stringify(defaultVal, null, 2), 'utf8');
         }
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     } catch (err) {
         return defaultVal;
     }
@@ -67,11 +66,24 @@ app.get('/api/admin/users', (req, res) => {
     }
 });
 
-// 3. KUPATA MAZUNGUMZO (MESEJI)
+// 3. KUPATA MAZUNGUMZO NA KUWAKISHIA ZIMESOMWA
 app.get('/api/messages', (req, res) => {
     try {
         const { sender, receiver } = req.query;
         let messages = loadData(MESSAGES_FILE, []);
+        let updated = false;
+
+        // Weka alama kuwa zimesomwa kama receiver ndiye anayezifungua
+        messages.forEach(m => {
+            if (m.sender === receiver && m.receiver === sender && !m.read) {
+                m.read = true;
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            saveData(MESSAGES_FILE, messages);
+        }
 
         const conversation = messages.filter(m => 
             (m.sender === sender && m.receiver === receiver) || 
@@ -84,7 +96,37 @@ app.get('/api/messages', (req, res) => {
     }
 });
 
-// 4. KUTUMA UJUMBE AU PICHA (FREE UNLIMITED)
+// 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA (UNREAD COUNT)
+app.get('/api/messages/unread', (req, res) => {
+    try {
+        const { user } = req.query;
+        let messages = loadData(MESSAGES_FILE, []);
+        let users = loadData(DATA_FILE, []);
+
+        // Chuja meseji ambazo mpokeaji ni huyu mtumiaji na bado hazijasomwa
+        const unreadMsgs = messages.filter(m => m.receiver === user && !m.read);
+
+        // Kusanya taarifa za kina (nani aliyetuma na idadi ya meseji)
+        let unreadMap = {};
+        unreadMsgs.forEach(m => {
+            if (!unreadMap[m.sender]) {
+                const senderObj = users.find(u => u.whatsappNumber === m.sender);
+                unreadMap[m.sender] = {
+                    senderPhone: m.sender,
+                    senderName: senderObj ? senderObj.fullName : "Mtumiaji",
+                    count: 0
+                };
+            }
+            unreadMap[m.sender].count += 1;
+        });
+
+        res.json(Object.values(unreadMap));
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu." });
+    }
+});
+
+// 4. KUTUMA UJUMBE AU PICHA
 app.post('/api/messages', (req, res) => {
     try {
         const { sender, receiver, text, photoData } = req.body;
@@ -100,6 +142,7 @@ app.post('/api/messages', (req, res) => {
             receiver,
             text: text || "",
             photoData: photoData || null,
+            read: false, // Hapa inaanzia haijasomwa
             createdAt: new Date()
         };
 
