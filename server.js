@@ -38,11 +38,28 @@ const messageSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Message = mongoose.model('Message', messageSchema);
 
+// Kazi ndogo ya kusafisha namba (kuondoa alama ya kuongeza na kodi za nchi, kisha kuweka 0 mbele)
+function sanitizePhoneNumber(phone) {
+    if (!phone) return "";
+    // Ondoa nafasi zote au herufi zisizotakiwa kasoro alama ya + na namba
+    let cleaned = phone.trim();
+    // Kama inaanza na + (kama +255 au +243), ibadilishe ianze na 0
+    if (cleaned.startsWith('+')) {
+        // Hii inaondoa alama ya + na tarakimu 3 za mwanzo za country code, kisha inaunganisha 0 mbele
+        cleaned = '0' + cleaned.replace(/^\+\d{1,3}/, '');
+    }
+    // Kama haijaanza na 0 na haina alama, hakikisha inaanza na 0
+    return cleaned;
+}
+
 // 1. KUJISAJILI
 app.post('/api/signup', async (req, res) => {
     try {
         let { fullName, whatsappNumber, photoData, seeking } = req.body;
         
+        // Safisha namba ya WhatsApp iwe na muundo wa kuanza na 0
+        whatsappNumber = sanitizePhoneNumber(whatsappNumber);
+
         const existingUser = await User.findOne({ whatsappNumber });
         if (existingUser) {
             return res.status(400).json({ error: "Namba hii ya simu/WhatsApp imeshajisajili tayari!" });
@@ -83,7 +100,9 @@ app.get('/api/admin/users', async (req, res) => {
 // 3. KUPATA MAZUNGUMZO NA KUWEKA ALAMA YA KUSOMWA (READ)
 app.get('/api/messages', async (req, res) => {
     try {
-        const { sender, receiver } = req.query;
+        let { sender, receiver } = req.query;
+        sender = sanitizePhoneNumber(sender);
+        receiver = sanitizePhoneNumber(receiver);
         
         await Message.updateMany(
             { sender: receiver, receiver: sender, read: false },
@@ -106,7 +125,9 @@ app.get('/api/messages', async (req, res) => {
 // 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA (UNREAD COUNT)
 app.get('/api/messages/unread', async (req, res) => {
     try {
-        const { user } = req.query;
+        let { user } = req.query;
+        user = sanitizePhoneNumber(user);
+        
         const unreadMsgs = await Message.find({ receiver: user, read: false });
         const users = await User.find({});
 
@@ -132,8 +153,11 @@ app.get('/api/messages/unread', async (req, res) => {
 // 4. KUTUMA UJUMBE AU PICHA
 app.post('/api/messages', async (req, res) => {
     try {
-        const { sender, receiver, text, photoData } = req.body;
+        let { sender, receiver, text, photoData } = req.body;
         
+        sender = sanitizePhoneNumber(sender);
+        receiver = sanitizePhoneNumber(receiver);
+
         const senderUser = await User.findOne({ whatsappNumber: sender });
         if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
