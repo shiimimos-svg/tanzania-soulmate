@@ -447,6 +447,12 @@
             return '+255' + clean;
         }
 
+        // Kazi ya kuchukua tarakimu 9 za mwisho za namba kwa ajili ya urahisi wa Login
+        function getLast9Digits(phone) {
+            let digits = phone.replace(/\D/g, '');
+            return digits.slice(-9);
+        }
+
         async function handleSignup(e) {
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
@@ -470,7 +476,6 @@
                 return;
             }
 
-            // Weka Loading State
             submitBtn.disabled = true;
             const originalText = submitBtn.innerText;
             submitBtn.innerText = "Inajisajili...";
@@ -524,7 +529,6 @@
                 return;
             }
 
-            // Weka Loading State kwenye Login
             submitBtn.disabled = true;
             const originalText = submitBtn.innerText;
             submitBtn.innerText = "Inaingia...";
@@ -535,10 +539,11 @@
                 const res = await fetch('/api/admin/users');
                 const users = await res.json();
                 
-                console.log("Namba ya kuingia:", whatsappNumber);
-                console.log("Namba zilizopo kwenye Database:", users.map(u => u.whatsappNumber));
+                const inputLast9 = getLast9Digits(whatsappNumber);
+                console.log("Tarakimu 9 za kuingia:", inputLast9);
 
-                const user = users.find(u => u.whatsappNumber === whatsappNumber);
+                // Inatafuta mtumiaji kwa kulinganisha tarakimu 9 za mwisho
+                const user = users.find(u => getLast9Digits(u.whatsappNumber) === inputLast9);
 
                 if (user) {
                     localStorage.setItem('currentUser', JSON.stringify(user));
