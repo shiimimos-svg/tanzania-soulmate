@@ -14,16 +14,21 @@ const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 function loadData(filePath, defaultVal) {
     try {
         if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(defaultVal, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(defaultVal, null, 2), 'utf8');
         }
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
     } catch (err) {
         return defaultVal;
     }
 }
 
 function saveData(filePath, data) {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (err) {
+        console.error("Hitilafu ya kuhifadhi faili:", err);
+    }
 }
 
 // 1. KUJISAJILI
@@ -41,7 +46,7 @@ app.post('/api/signup', (req, res) => {
             fullName,
             whatsappNumber,
             photoData: photoData || "https://via.placeholder.com/150",
-            seeking: seeking || "Mchumba"
+            seeking: seeking || "Urafiki Tu"
         };
 
         users.push(newUser);
