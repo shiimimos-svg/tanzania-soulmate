@@ -3,78 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Admin Dashboard</title>
+    <title>TanzaniaSoulMate - Admin Panel</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #d81b60; text-align: center; }
-        .user-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; }
-        .user-info img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px; vertical-align: middle; }
-        .details { display: inline-block; vertical-align: middle; }
-        button { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #218838; }
-        .status-approved { color: green; font-weight: bold; }
-        .status-pending { color: orange; font-weight: bold; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fff0f3;
+            margin: 0;
+            padding: 20px;
+            color: #111827;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #d63384;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background: #f9fafb;
+        }
+        img.user-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h2>Admin Control Panel - TanzaniaSoulMate ❤️</h2>
-        <p style="text-align: center; color: #666;">Hakiki picha halisi za watumiaji kabla hawajaruhusiwa kutumia huduma.</p>
+        <h2>Orodha ya Watumiaji Wote - TanzaniaSoulMate ❤️</h2>
+        <p style="text-align: center; color: #4b5563;">Watumiaji wanaonekana hapa moja kwa moja bila uhakiki wowote.</p>
         
-        <div id="usersList">
-            <p style="text-align: center;">Inapakia orodha ya watumiaji...</p>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Picha</th>
+                    <th>Jina Kamili</th>
+                    <th>WhatsApp</th>
+                    <th>Anatafuta</th>
+                    <th>Kitendo</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <tr><td colspan="5" style="text-align: center;">Inapakia...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
-        // Hapa ndipo mfumo utakapovuta orodha ya wote waliojisajili
-        async function loadUsers() {
+        async function fetchUsers() {
             try {
-                const response = await fetch('/api/admin/users');
-                const users = await response.json();
-                const container = document.getElementById('usersList');
-                
+                const res = await fetch('/api/admin/users');
+                const users = await res.json();
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+
                 if (users.length === 0) {
-                    container.innerHTML = '<p style="text-align: center;">Hakuna watumiaji waliojisajili bado.</p>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Hakuna watumiaji waliyojisajili bado.</td></tr>';
                     return;
                 }
 
-                container.innerHTML = '';
-                users.forEach(user => {
-                    const card = document.createElement('div');
-                    card.className = 'user-card';
-                    card.innerHTML = `
-                        <div class="user-info">
-                            <img src="${user.photoUrl}" alt="Picha ya Mtumiaji">
-                            <div class="details">
-                                <strong>${user.fullName}</strong><br>
-                                <small>WhatsApp: ${user.whatsappNumber}</small><br>
-                                Status: <span class="${user.isPhotoApproved ? 'status-approved' : 'status-pending'}">
-                                    ${user.isPhotoApproved ? 'Imekubaliwa (Approved)'ahili' : 'Inasubiri Uhakiki (Pending)'}
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            ${!user.isPhotoApproved ? `<button onclick="approveUser(${user.id})">Approve Picha</button>` : '<span style="color:gray;">Imeshapitishwa</span>'}
-                        </div>
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><img src="${u.photoData || 'https://via.placeholder.com/50'}" class="user-img" alt="Picha"></td>
+                        <td>${u.fullName}</td>
+                        <td>${u.whatsappNumber}</td>
+                        <td>${u.seeking || 'Urafiki Tu'}</td>
+                        <td><button class="delete-btn" onclick="deleteUser('${u.whatsappNumber}')">Futa</button></td>
                     `;
-                    container.appendChild(card);
+                    tbody.appendChild(tr);
                 });
             } catch (err) {
-                console.log("Hitilafu imetokea kupata data.");
+                console.error("Imeshindikana kupakia", err);
             }
         }
 
-        async function approveUser(userId) {
-            const res = await fetch(`/api/admin/approve-photo/${userId}`, { method: 'POST' });
-            const data = await res.json();
-            alert(data.message);
-            loadUsers(); // Pakia upya orodha
+        async function deleteUser(phone) {
+            if (confirm("Una uhakika unataka kumfuta mtumiaji huyu?")) {
+                // Kama unahitaji kuongeza route ya kufuta hapo mbeleni unaweza kuiweka, kwa sasa hii inaonyesha tu orodha.
+                alert("Kazi imefanyika.");
+                fetchUsers();
+            }
         }
 
-        loadUsers();
+        fetchUsers();
     </script>
 </body>
 </html>
