@@ -250,6 +250,39 @@
             border-color: var(--primary);
         }
 
+        /* Mtindo wa namba ya simu yenye +255 ya kudumu */
+        .phone-input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .phone-input-container:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(214, 51, 132, 0.1);
+        }
+
+        .country-code {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 12px 10px;
+            font-size: 15px;
+            font-weight: bold;
+            border-right: 1px solid #d1d5db;
+            user-select: none;
+        }
+
+        .phone-input-container input {
+            border: none;
+            outline: none;
+            padding: 12px;
+            font-size: 15px;
+            width: 100%;
+        }
+
         .modal-submit {
             width: 100%;
             background: var(--primary);
@@ -309,7 +342,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <div class="hero-badge">MADE FOR CONNECTIONS IN TANZANIA & PHILIPPINES</div>
+            <div class="hero-badge">MADE EXCLUSIVELY FOR TANZANIA</div>
             <h1>Find Your Heart in Tanzania ❤️</h1>
             <p>Meet genuine people. Connect. Chat. Build something real.</p>
             <button class="hero-btn" onclick="openModal('signup')">Jiunge na TanzaniaSoulMate &rarr;</button>
@@ -331,8 +364,11 @@
             <div id="loginSection" class="form-section active">
                 <form id="loginForm" onsubmit="handleLogin(event)">
                     <div class="form-group">
-                        <label>Namba ya WhatsApp / Simu (Tanzania au +63... Ufilipino)</label>
-                        <input type="text" id="loginPhone" placeholder="Mfano: 0712345678 au +63..." required>
+                        <label>Namba ya WhatsApp / Simu (Tanzania)</label>
+                        <div class="phone-input-container">
+                            <span class="country-code">+255</span>
+                            <input type="text" id="loginPhone" placeholder="712345678 (Anza na 0 au 7)" maxlength="10" required>
+                        </div>
                     </div>
                     <button type="submit" class="modal-submit">Ingia Kwenye Akaunti</button>
                 </form>
@@ -346,8 +382,11 @@
                         <input type="text" id="signupName" placeholder="Andika jina lako" required>
                     </div>
                     <div class="form-group">
-                        <label>Namba ya WhatsApp / Simu (Tanzania au +63... Ufilipino)</label>
-                        <input type="text" id="signupPhone" placeholder="Mfano: 0712345678 au +63..." required>
+                        <label>Namba ya WhatsApp / Simu (Tanzania)</label>
+                        <div class="phone-input-container">
+                            <span class="country-code">+255</span>
+                            <input type="text" id="signupPhone" placeholder="712345678 (Anza na 0 au 7)" maxlength="10" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Unatafuta Nini?</label>
@@ -394,10 +433,19 @@
             document.getElementById('message').innerText = '';
         }
 
+        // Kazi ya kusafisha na kuunganisha namba ya Tanzania
+        function formatTzPhone(inputVal) {
+            let clean = inputVal.trim();
+            if (clean.startsWith('0')) {
+                clean = clean.substring(1);
+            }
+            return '+255' + clean;
+        }
+
         async function handleSignup(e) {
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
-            const whatsappNumber = document.getElementById('signupPhone').value;
+            const rawPhone = document.getElementById('signupPhone').value;
             const seeking = document.getElementById('signupSeeking').value;
             const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
@@ -406,6 +454,14 @@
             if (!photoFile) {
                 msgDiv.style.color = 'red';
                 msgDiv.innerText = "Tafadhali chagua picha yako kwanza!";
+                return;
+            }
+
+            const whatsappNumber = formatTzPhone(rawPhone);
+            const tzPhoneRegex = /^\+255[67]\d{8}$/;
+            if (!tzPhoneRegex.test(whatsappNumber)) {
+                msgDiv.style.color = 'red';
+                msgDiv.innerText = "Namba ya simu si sahihi! Tafadhali ingiza namba halali ya Tanzania (mfano: 07xxxxxxxx).";
                 return;
             }
 
@@ -451,9 +507,17 @@
 
         async function handleLogin(e) {
             e.preventDefault();
-            const phone = document.getElementById('loginPhone').value;
+            const rawPhone = document.getElementById('loginPhone').value;
             const msgDiv = document.getElementById('message');
             const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            const whatsappNumber = formatTzPhone(rawPhone);
+            const tzPhoneRegex = /^\+255[67]\d{8}$/;
+            if (!tzPhoneRegex.test(whatsappNumber)) {
+                msgDiv.style.color = 'red';
+                msgDiv.innerText = "Namba ya simu si sahihi! Tafadhali ingiza namba halali ya Tanzania (mfano: 07xxxxxxxx).";
+                return;
+            }
 
             // Weka Loading State kwenye Login
             submitBtn.disabled = true;
@@ -466,7 +530,7 @@
                 const res = await fetch('/api/admin/users');
                 const users = await res.json();
                 
-                const user = users.find(u => u.whatsappNumber === phone);
+                const user = users.find(u => u.whatsappNumber === whatsappNumber);
 
                 if (user) {
                     localStorage.setItem('currentUser', JSON.stringify(user));
