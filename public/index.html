@@ -401,12 +401,18 @@
             const seeking = document.getElementById('signupSeeking').value;
             const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
 
             if (!photoFile) {
                 msgDiv.style.color = 'red';
                 msgDiv.innerText = "Tafadhali chagua picha yako kwanza!";
                 return;
             }
+
+            // Weka Loading State
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Inajisajili...";
 
             msgDiv.style.color = 'blue';
             msgDiv.innerText = "Inapakia picha yako, tafadhali subiri...";
@@ -431,10 +437,14 @@
                     } else {
                         msgDiv.style.color = 'red';
                         msgDiv.innerText = data.error;
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = originalText;
                     }
                 } catch (err) {
                     msgDiv.style.color = 'red';
                     msgDiv.innerText = "Hitilafu ya mtandao wakati wa kujisajili. Jaribu tena.";
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalText;
                 }
             };
         }
@@ -443,6 +453,14 @@
             e.preventDefault();
             const phone = document.getElementById('loginPhone').value;
             const msgDiv = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Weka Loading State kwenye Login
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Inaingia...";
+            msgDiv.style.color = 'blue';
+            msgDiv.innerText = "Inahakiki taarifa zako, tafadhali subiri...";
 
             try {
                 const res = await fetch('/api/admin/users');
@@ -460,10 +478,14 @@
                 } else {
                     msgDiv.style.color = 'red';
                     msgDiv.innerText = "Namba hii haijapatikana. Tafadhali jisajili kwanza.";
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalText;
                 }
             } catch (err) {
                 msgDiv.style.color = 'red';
                 msgDiv.innerText = "Hitilafu imetokea wakati wa kuingia.";
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
             }
         }
 
