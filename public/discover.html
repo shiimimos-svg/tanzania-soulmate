@@ -67,7 +67,31 @@
         }
 
         h2 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* Sehemu ya Makundi (Filter Tabs) */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #ffffff;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--primary);
+            color: white;
         }
 
         .users-grid {
@@ -250,7 +274,16 @@
     </header>
 
     <div class="container">
-        <h2>Watu Waliopo Karibu Yako ❤️</h2>
+        <h2>Chagua Kundi Unalolitaka ❤️</h2>
+        
+        <!-- Vifungo vya Makundi (Filter Tabs) -->
+        <div class="filter-tabs">
+            <button class="filter-btn active" onclick="filterUsers('Wote', this)">Wote</button>
+            <button class="filter-btn" onclick="filterUsers('Mchumba wa Ndoa', this)">Mchumba wa Ndoa</button>
+            <button class="filter-btn" onclick="filterUsers('Urafiki Tu', this)">Urafiki Tu</button>
+            <button class="filter-btn" onclick="filterUsers('Mahusiano ya Kawaida', this)">Mahusiano ya Kawaida</button>
+        </div>
+
         <div id="usersGrid" class="users-grid">
             <!-- Watumiaji watajazwa hapa -->
         </div>
@@ -275,7 +308,7 @@
             </div>
             <div id="imagePreviewContainer" style="padding: 5px 10px; background: #eee; display: none; font-size: 12px; align-items: center; justify-content: space-between;">
                 <span id="fileName">Picha imeteuliwa</span>
-                <button onclick="clearImage()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">Odoa</button>
+                <button onclick="clearImage()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">Ondoa</button>
             </div>
         </div>
     </div>
@@ -288,31 +321,54 @@
             document.getElementById('welcomeUser').innerText = `Karibu, ${currentUser.fullName}`;
         }
 
+        let allUsers = [];
         let activeChatUserPhone = null;
         let selectedImageBase64 = null;
 
         async function loadUsers() {
             try {
                 const res = await fetch('/api/admin/users');
-                const users = await res.json();
-                const grid = document.getElementById('usersGrid');
-                grid.innerHTML = '';
-
-                users.forEach(u => {
-                    if (u.whatsappNumber !== currentUser.whatsappNumber) {
-                        const card = document.createElement('div');
-                        card.className = 'user-card';
-                        card.innerHTML = `
-                            <img src="${u.photoData || 'https://via.placeholder.com/250'}" alt="Picha">
-                            <h3>${u.fullName}</h3>
-                            <p>Anatafuta: ${u.seeking || 'Urafiki'}</p>
-                            <button class="chat-btn" onclick="openChat('${u.whatsappNumber}', '${u.fullName}')">Anzisha Mazungumzo</button>
-                        `;
-                        grid.appendChild(card);
-                    }
-                });
+                allUsers = await res.json();
+                displayUsers(allUsers);
             } catch (err) {
                 console.error("Imeshindikana kupakia watumiaji", err);
+            }
+        }
+
+        function displayUsers(usersToDisplay) {
+            const grid = document.getElementById('usersGrid');
+            grid.innerHTML = '';
+
+            let filtered = usersToDisplay.filter(u => u.whatsappNumber !== currentUser.whatsappNumber);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted);">Hakuna watumiaji waliopatikana kwenye kundi hili.</p>';
+                return;
+            }
+
+            filtered.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <img src="${u.photoData || 'https://via.placeholder.com/250'}" alt="Picha">
+                    <h3>${u.fullName}</h3>
+                    <p>Anatafuta: <b>${u.seeking || 'Urafiki Tu'}</b></p>
+                    <button class="chat-btn" onclick="openChat('${u.whatsappNumber}', '${u.fullName}')">Anzisha Mazungumzo</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterUsers(category, btnElement) {
+            // Badilisha muonekano wa kitufe kilichochaguliwa (active tab)
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            if (category === 'Wote') {
+                displayUsers(allUsers);
+            } else {
+                const filtered = allUsers.filter(u => u.seeking === category);
+                displayUsers(filtered);
             }
         }
 
