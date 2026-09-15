@@ -3,16 +3,19 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB (Inachukua kutoka Render Environment Variables)
+// Muunganisho wa MongoDB ukiwa na opts za kuzuia kuchelewa (Connection Pooling & Optimization)
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
-mongoose.connect(MONGODB_URI)
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000, // Epuka kusubiri sana kama database haipatikani mara moja
+    socketTimeoutMS: 45000,
+})
 .then(() => console.log("MongoDB Connected Successfully"))
 .catch(err => console.error("MongoDB Connection Error:", err));
 
@@ -20,15 +23,15 @@ mongoose.connect(MONGODB_URI)
 const userSchema = new mongoose.Schema({
     id: Number,
     fullName: String,
-    whatsappNumber: { type: String, unique: true },
+    whatsappNumber: { type: String, unique: true, index: true },
     photoData: String,
     seeking: String
 });
 
 const messageSchema = new mongoose.Schema({
     id: Number,
-    sender: String,
-    receiver: String,
+    sender: { type: String, index: true },
+    receiver: { type: String, index: true },
     text: String,
     photoData: String,
     read: { type: Boolean, default: false },
@@ -41,14 +44,10 @@ const Message = mongoose.model('Message', messageSchema);
 // Kazi ndogo ya kusafisha namba (kuondoa alama ya kuongeza na kodi za nchi, kisha kuweka 0 mbele)
 function sanitizePhoneNumber(phone) {
     if (!phone) return "";
-    // Ondoa nafasi zote au herufi zisizotakiwa kasoro alama ya + na namba
     let cleaned = phone.trim();
-    // Kama inaanza na + (kama +255 au +243), ibadilishe ianze na 0
     if (cleaned.startsWith('+')) {
-        // Hii inaondoa alama ya + na tarakimu 3 za mwanzo za country code, kisha inaunganisha 0 mbele
         cleaned = '0' + cleaned.replace(/^\+\d{1,3}/, '');
     }
-    // Kama haijaanza na 0 na haina alama, hakikisha inaanza na 0
     return cleaned;
 }
 
@@ -57,7 +56,6 @@ app.post('/api/signup', async (req, res) => {
     try {
         let { fullName, whatsappNumber, photoData, seeking } = req.body;
         
-        // Safisha namba ya WhatsApp iwe na muundo wa kuanza na 0
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
 
         const existingUser = await User.findOne({ whatsappNumber });
@@ -65,7 +63,6 @@ app.post('/api/signup', async (req, res) => {
             return res.status(400).json({ error: "Namba hii ya simu/WhatsApp imeshajisajili tayari!" });
         }
 
-        // Kama picha haipo au ni tupu, weka picha ya kawaida ya kupitisha muda
         if (!photoData || photoData.trim() === "") {
             photoData = "https://via.placeholder.com/150";
         }
@@ -90,7 +87,7 @@ app.post('/api/signup', async (req, res) => {
 // 2. KUPATA ORODHA YA WATUMIAJI
 app.get('/api/admin/users', async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await User.find({}).lean(); // Tumia .lean() kuongeza kasi ya kusoma data kwenye database
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kupata watumiaji." });
@@ -114,7 +111,7 @@ app.get('/api/messages', async (req, res) => {
                 { sender: sender, receiver: receiver },
                 { sender: receiver, receiver: sender }
             ]
-        }).sort({ createdAt: 1 });
+        }).sort({ createdAt: 1 }).lean();
 
         res.json(conversation);
     } catch (err) {
@@ -128,8 +125,8 @@ app.get('/api/messages/unread', async (req, res) => {
         let { user } = req.query;
         user = sanitizePhoneNumber(user);
         
-        const unreadMsgs = await Message.find({ receiver: user, read: false });
-        const users = await User.find({});
+        const unreadMsgs = await Message.find({ receiver: user, read: false }).lean();
+        const users = await User.find({}).lean();
 
         let unreadMap = {};
         unreadMsgs.forEach(m => {
