@@ -451,7 +451,7 @@
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
             const rawPhone = document.getElementById('signupPhone').value;
-            const seeking = document.getElementById('signupSeeking'].value;
+            const seeking = document.getElementById('signupSeeking').value;
             const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -535,7 +535,6 @@
                 const res = await fetch('/api/admin/users');
                 const users = await res.json();
                 
-                // Hii inakusaidia kuona namba kwenye Console ya browser yako
                 console.log("Namba ya kuingia:", whatsappNumber);
                 console.log("Namba zilizopo kwenye Database:", users.map(u => u.whatsappNumber));
 
@@ -571,4 +570,3 @@
     </script>
 </body>
 </html>
-```[cite: 3]
