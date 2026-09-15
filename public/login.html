@@ -37,15 +37,34 @@
             flex-direction: column;
             gap: 15px;
         }
-        input {
-            padding: 12px;
+        /* Mtindo wa kikundi cha namba ya simu chenye +255 ya kudumu */
+        .phone-input-container {
+            display: flex;
+            align-items: center;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 16px;
-            outline: none;
+            overflow: hidden;
+            background: #fff;
         }
-        input:focus {
+        .phone-input-container:focus-within {
             border-color: #d63384;
+            box-shadow: 0 0 0 2px rgba(214, 51, 132, 0.1);
+        }
+        .country-code {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 12px 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border-right: 1px solid #ccc;
+            user-select: none;
+        }
+        .phone-input-container input {
+            border: none;
+            outline: none;
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
         }
         button {
             background: #d63384;
@@ -76,10 +95,14 @@
 <body>
     <div class="login-card">
         <h2>Ingia kwenye Akaunti ❤️</h2>
-        <p class="subtitle">TanzaniaSoulMate</p>
+        <p class="subtitle">TanzaniaSoulMate - Tanzania Pekee</p>
         
         <form id="loginForm">
-            <input type="text" id="whatsappNumber" placeholder="Weka Namba yako ya WhatsApp" required>
+            <!-- Sehemu ya namba ya simu yenye +255 ya kudumu na kuanza na 0 -->
+            <div class="phone-input-container">
+                <span class="country-code">+255</span>
+                <input type="text" id="whatsappNumber" placeholder="712345678 (Anza na 0 au 7)" maxlength="10" required>
+            </div>
             <button type="submit">Log In</button>
         </form>
         
@@ -91,7 +114,22 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+            let rawInput = document.getElementById('whatsappNumber').value.trim();
+
+            // Kama mtumiaji alianza kuandika na 0 (mfano: 0712345678), iondoe hiyo 0 ya mwanzo
+            if (rawInput.startsWith('0')) {
+                rawInput = rawInput.substring(1);
+            }
+
+            // Unganisha na ile +255 ya kudumu ili ipate muundo kamili: +255712345678
+            const whatsappNumber = '+255' + rawInput;
+
+            // Uhakiki wa haraka kabla ya kutuma kwenye seva
+            const tzPhoneRegex = /^\+255[67]\d{8}$/;
+            if (!tzPhoneRegex.test(whatsappNumber)) {
+                alert('Tafadhali ingiza namba sahihi ya simu ya Tanzania (mfano: 07xxxxxxxx au 06xxxxxxxx)!');
+                return;
+            }
 
             try {
                 const response = await fetch('/api/login', {
@@ -102,10 +140,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Tunahifadhi taarifa za mtumiaji kwenye kivinjari
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     alert('Umeingia kwa mafanikio! Karibu tena.');
-                    window.location.href = 'discover.html'; // Badilisha iende kwenye ukurasa wako mkuu wa ndani
+                    window.location.href = 'discover.html';
                 } else {
                     alert(data.error || 'Namba ya WhatsApp haijapatikana!');
                 }
@@ -116,4 +153,5 @@
         });
     </script>
 </body>
+</html>
 </html>
