@@ -433,22 +433,17 @@
             document.getElementById('message').innerText = '';
         }
 
-        // Kazi iliyoboreshwa ya kusafisha na kuunganisha namba ya Tanzania
+        // Kazi ya kusafisha na kuunganisha namba ya Tanzania kwa usahihi
         function formatTzPhone(inputVal) {
             let clean = inputVal.trim();
-            
-            // Ondoa mwanzo wowote wa +255 au 255 kama ipo
             if (clean.startsWith('+255')) {
                 clean = clean.substring(4);
             } else if (clean.startsWith('255')) {
                 clean = clean.substring(3);
             }
-            
-            // Ondoa sifuri ya kwanza ili kuzuia kurudia sifuri
             if (clean.startsWith('0')) {
                 clean = clean.substring(1);
             }
-            
             return '+255' + clean;
         }
 
@@ -456,7 +451,7 @@
             e.preventDefault();
             const fullName = document.getElementById('signupName').value;
             const rawPhone = document.getElementById('signupPhone').value;
-            const seeking = document.getElementById('signupSeeking').value;
+            const seeking = document.getElementById('signupSeeking'].value;
             const photoFile = document.getElementById('signupPhotoFile').files[0];
             const msgDiv = document.getElementById('message');
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -540,6 +535,10 @@
                 const res = await fetch('/api/admin/users');
                 const users = await res.json();
                 
+                // Hii inakusaidia kuona namba kwenye Console ya browser yako
+                console.log("Namba ya kuingia:", whatsappNumber);
+                console.log("Namba zilizopo kwenye Database:", users.map(u => u.whatsappNumber));
+
                 const user = users.find(u => u.whatsappNumber === whatsappNumber);
 
                 if (user) {
@@ -572,3 +571,4 @@
     </script>
 </body>
 </html>
+```[cite: 3]
