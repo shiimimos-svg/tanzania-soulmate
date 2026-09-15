@@ -433,12 +433,22 @@
             document.getElementById('message').innerText = '';
         }
 
-        // Kazi ya kusafisha na kuunganisha namba ya Tanzania
+        // Kazi iliyoboreshwa ya kusafisha na kuunganisha namba ya Tanzania
         function formatTzPhone(inputVal) {
             let clean = inputVal.trim();
+            
+            // Ondoa mwanzo wowote wa +255 au 255 kama ipo
+            if (clean.startsWith('+255')) {
+                clean = clean.substring(4);
+            } else if (clean.startsWith('255')) {
+                clean = clean.substring(3);
+            }
+            
+            // Ondoa sifuri ya kwanza ili kuzuia kurudia sifuri
             if (clean.startsWith('0')) {
                 clean = clean.substring(1);
             }
+            
             return '+255' + clean;
         }
 
