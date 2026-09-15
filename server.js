@@ -1,6 +1,7 @@
 const express = require('express');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -8,87 +9,91 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-const DATA_FILE = path.join(__dirname, 'users.json');
-const MESSAGES_FILE = path.join(__dirname, 'messages.json');
+// Muunganisho wa MongoDB (Inachukua kutoka Render Environment Variables au inaweka ya kwako)
+const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
-function loadData(filePath, defaultVal) {
-    try {
-        if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(defaultVal, null, 2), 'utf8');
-        }
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (err) {
-        return defaultVal;
-    }
-}
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log("MongoDB Connected Successfully"))
+  .catch(err => console.error("MongoDB Connection Error:", err));
 
-function saveData(filePath, data) {
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-    } catch (err) {
-        console.error("Hitilafu ya kuhifadhi faili:", err);
-    }
-}
+// Database Schemas (Miundo ya Data)
+const userSchema = new mongoose.Schema({
+    id: Number,
+    fullName: String,
+    whatsappNumber: { type: String, unique: true },
+    photoData: String,
+    seeking: String
+});
+
+const messageSchema = new mongoose.Schema({
+    id: Number,
+    sender: String,
+    receiver: String,
+    text: String,
+    photoData: String,
+    read: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+const Message = mongoose.model('Message', messageSchema);
 
 // 1. KUJISAJILI
-app.post('/api/signup', (req, res) => {
+app.post('/api/signup', async (req, res) => {
     try {
         const { fullName, whatsappNumber, photoData, seeking } = req.body;
-        let users = loadData(DATA_FILE, []);
-
-        if (users.find(u => u.whatsappNumber === whatsappNumber)) {
-            return res.status(400).json({ error: "Namba hii ya WhatsApp imeshajisajili tayari!" });
+        
+        const existingUser = await User.findOne({ whatsappNumber });
+        if (existingUser) {
+            return res.status(400).json({ error: "Namba hii ya simu/WhatsApp imeshajisajili tayari!" });
         }
 
-        const newUser = {
-            id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
+        const count = await User.countDocuments();
+        const newUser = new User({
+            id: count + 1,
             fullName,
             whatsappNumber,
             photoData: photoData || "https://via.placeholder.com/150",
             seeking: seeking || "Urafiki Tu"
-        };
+        });
 
-        users.push(newUser);
-        saveData(DATA_FILE, users);
+        await newUser.save();
         res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
     }
 });
 
 // 2. KUPATA ORODHA YA WATUMIAJI
-app.get('/api/admin/users', (req, res) => {
+app.get('/api/admin/users', async (req, res) => {
     try {
-        const users = loadData(DATA_FILE, []);
+        const users = await User.find({});
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kupata watumiaji." });
     }
 });
 
-// 3. KUPATA MAZUNGUMZO NA KUWAKISHIA ZIMESOMWA
-app.get('/api/messages', (req, res) => {
+// 3. KUPATA MAZUNGUMZO NA KUWEKA ALAMA YA KUSOMWA (READ)
+app.get('/api/messages', async (req, res) => {
     try {
         const { sender, receiver } = req.query;
-        let messages = loadData(MESSAGES_FILE, []);
-        let updated = false;
-
+        
         // Weka alama kuwa zimesomwa kama receiver ndiye anayezifungua
-        messages.forEach(m => {
-            if (m.sender === receiver && m.receiver === sender && !m.read) {
-                m.read = true;
-                updated = true;
-            }
-        });
-
-        if (updated) {
-            saveData(MESSAGES_FILE, messages);
-        }
-
-        const conversation = messages.filter(m => 
-            (m.sender === sender && m.receiver === receiver) || 
-            (m.sender === receiver && m.receiver === sender)
+        await Message.updateMany(
+            { sender: receiver, receiver: sender, read: false },
+            { $set: { read: true } }
         );
+
+        const conversation = await Message.find({
+            $or: [
+                { sender: sender, receiver: receiver },
+                { sender: receiver, receiver: sender }
+            ]
+        }).sort({ createdAt: 1 });
 
         res.json(conversation);
     } catch (err) {
@@ -97,16 +102,12 @@ app.get('/api/messages', (req, res) => {
 });
 
 // 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA (UNREAD COUNT)
-app.get('/api/messages/unread', (req, res) => {
+app.get('/api/messages/unread', async (req, res) => {
     try {
         const { user } = req.query;
-        let messages = loadData(MESSAGES_FILE, []);
-        let users = loadData(DATA_FILE, []);
+        const unreadMsgs = await Message.find({ receiver: user, read: false });
+        const users = await User.find({});
 
-        // Chuja meseji ambazo mpokeaji ni huyu mtumiaji na bado hazijasomwa
-        const unreadMsgs = messages.filter(m => m.receiver === user && !m.read);
-
-        // Kusanya taarifa za kina (nani aliyetuma na idadi ya meseji)
         let unreadMap = {};
         unreadMsgs.forEach(m => {
             if (!unreadMap[m.sender]) {
@@ -127,27 +128,23 @@ app.get('/api/messages/unread', (req, res) => {
 });
 
 // 4. KUTUMA UJUMBE AU PICHA
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
     try {
         const { sender, receiver, text, photoData } = req.body;
-        let users = loadData(DATA_FILE, []);
-        let messages = loadData(MESSAGES_FILE, []);
-
-        const senderUser = users.find(u => u.whatsappNumber === sender);
+        
+        const senderUser = await User.findOne({ whatsappNumber: sender });
         if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
-        const newMessage = {
+        const newMessage = new Message({
             id: Date.now(),
             sender,
             receiver,
             text: text || "",
             photoData: photoData || null,
-            read: false, // Hapa inaanzia haijasomwa
-            createdAt: new Date()
-        };
+            read: false
+        });
 
-        messages.push(newMessage);
-        saveData(MESSAGES_FILE, messages);
+        await newMessage.save();
 
         res.json({
             success: true,
