@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 const app = express();
@@ -8,127 +9,112 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-const DATA_FILE = path.join(__dirname, 'users.json');
-const MESSAGES_FILE = path.join(__dirname, 'messages.json');
+const MONGO_URI = process.env.MONGO_URI || 'WENDA_WEKA_LINK_YA_MONGODB_YAKO_HAPA';
 
-function loadData(filePath, defaultVal) {
-    try {
-        if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(defaultVal, null, 2));
-        }
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (err) {
-        return defaultVal;
-    }
-}
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Imefaulu kuunganishwa na MongoDB!'))
+    .catch(err => console.error('Hitilafu ya kuunganisha MongoDB:', err));
 
-function saveData(filePath, data) {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
+// SCHEMAS NA MODELS ZA MONGODB
+const userSchema = new mongoose.Schema({
+    id: Number,
+    fullName: String,
+    whatsappNumber: { type: String, unique: true },
+    photoData: String,
+    seeking: String
+});
+
+const messageSchema = new mongoose.Schema({
+    sender: String,
+    receiver: String,
+    text: String,
+    photoData: { type: String, default: null }, // Sehemu ya kuhifadhi picha kwenye chat
+    createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+const Message = mongoose.model('Message', messageSchema);
 
 // 1. KUJISAJILI
-app.post('/api/signup', (req, res) => {
-    const { fullName, whatsappNumber, photoData, seeking } = req.body;
-    let users = loadData(DATA_FILE, []);
+app.post('/api/signup', async (req, res) => {
+    try {
+        const { fullName, whatsappNumber, photoData, seeking } = req.body;
+        
+        const existingUser = await User.findOne({ whatsappNumber });
+        if (existingUser) {
+            return res.status(400).json({ error: "Namba hii ya WhatsApp imeshajisajili tayari!" });
+        }
 
-    if (users.find(u => u.whatsappNumber === whatsappNumber)) {
-        return res.status(400).json({ error: "Namba hii ya WhatsApp imeshajisajili tayari!" });
+        const count = await User.countDocuments();
+        const newUser = new User({
+            id: count + 1,
+            fullName,
+            whatsappNumber,
+            photoData: photoData || "https://via.placeholder.com/150",
+            seeking: seeking || "Mchumba"
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
     }
-
-    const newUser = {
-        id: users.length > 0 ? users[users.length - 1].id + 1 : 1,
-        fullName,
-        whatsappNumber,
-        photoData: photoData || "https://via.placeholder.com/150",
-        seeking: seeking || "Mchumba",
-        freeMessagesLeft: 5,
-        subscriptionExpiresAt: null
-    };
-
-    users.push(newUser);
-    saveData(DATA_FILE, users);
-    res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
 });
 
 // 2. KUPATA ORODHA YA WATUMIAJI
-app.get('/api/admin/users', (req, res) => {
-    res.json(loadData(DATA_FILE, []));
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Imeshindikana kupata watumiaji." });
+    }
 });
 
-// 3. KUPATA MAZUNGUMZO KATI YA WATU WAWILI (Kupitia Namba za WhatsApp au IDs)
-app.get('/api/messages', (req, res) => {
-    const { sender, receiver } = req.query;
-    let messages = loadData(MESSAGES_FILE, []);
+// 3. KUPATA MAZUNGUMZO (MESEJI)
+app.get('/api/messages', async (req, res) => {
+    try {
+        const { sender, receiver } = req.query;
+        const messages = await Message.find({
+            $or: [
+                { sender: sender, receiver: receiver },
+                { sender: receiver, receiver: sender }
+            ]
+        }).sort({ createdAt: 1 });
 
-    const conversation = messages.filter(m => 
-        (m.sender === sender && m.receiver === receiver) || 
-        (m.sender === receiver && m.receiver === sender)
-    );
-
-    res.json(conversation);
+        res.json(messages);
+    } catch (err) {
+        res.status(500).json({ error: "Imeshindikana kupata meseji." });
+    }
 });
 
-// 4. KUTUMA UJUMBE
-app.post('/api/messages', (req, res) => {
-    const { sender, receiver, text } = req.body;
-    let users = loadData(DATA_FILE, []);
-    let messages = loadData(MESSAGES_FILE, []);
+// 4. KUTUMA UJUMBE AU PICHA (FREE UNLIMITED)
+app.post('/api/messages', async (req, res) => {
+    try {
+        const { sender, receiver, text, photoData } = req.body;
+        
+        const senderUser = await User.findOne({ whatsappNumber: sender });
+        if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
-    const senderUser = users.find(u => u.whatsappNumber === sender);
-    if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
-
-    const now = new Date();
-    const hasFreeMsgs = senderUser.freeMessagesLeft > 0;
-    const hasActiveSub = senderUser.subscriptionExpiresAt && new Date(senderUser.subscriptionExpiresAt) > now;
-
-    if (!hasFreeMsgs && !hasActiveSub) {
-        return res.status(403).json({ 
-            error: "Ujumbe wako wa bure umeisha! Tafadhali lipa TZS 2,000 ili uendelee kuchati.",
-            locked: true 
+        const newMessage = new Message({
+            sender,
+            receiver,
+            text: text || "",
+            photoData: photoData || null
         });
+
+        await newMessage.save();
+
+        res.json({
+            success: true,
+            message: newMessage
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu wakati wa kutuma ujumbe." });
     }
-
-    if (!hasActiveSub && hasFreeMsgs) {
-        senderUser.freeMessagesLeft -= 1;
-        saveData(DATA_FILE, users);
-    }
-
-    const newMessage = {
-        id: Date.now(),
-        sender,
-        receiver,
-        text,
-        createdAt: new Date()
-    };
-
-    messages.push(newMessage);
-    saveData(MESSAGES_FILE, messages);
-
-    res.json({
-        success: true,
-        message: newMessage,
-        freeMessagesLeft: senderUser.freeMessagesLeft
-    });
 });
 
-// 5. KULIPIA TZS 2,000 (Siku 5)
-app.post('/api/subscribe/:whatsappNumber', (req, res) => {
-    const whatsappNumber = req.params.whatsappNumber;
-    let users = loadData(DATA_FILE, []);
-    const user = users.find(u => u.whatsappNumber === whatsappNumber);
-
-    if (!user) return res.status(404).json({ error: "Mtumiaji hajapatikana!" });
-
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 5);
-
-    user.subscriptionExpiresAt = expiryDate;
-    saveData(DATA_FILE, users);
-
-    res.json({ message: "Malipo yamethibitishwa! Una siku 5 za kuchati bila kikomo.", expiresAt: user.subscriptionExpiresAt });
-});
-
-// 6. ADMIN ROUTE
+// ADMIN ROUTE
 app.get('/admin', (req, res) => {
     const adminPath = path.join(__dirname, 'admin.html');
     if (fs.existsSync(adminPath)) {
