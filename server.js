@@ -9,14 +9,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB (Inachukua kutoka Render Environment Variables au inaweka ya kwako)
+// Muunganisho wa MongoDB (Inachukua kutoka Render Environment Variables)
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log("MongoDB Connected Successfully"))
-  .catch(err => console.error("MongoDB Connection Error:", err));
+mongoose.connect(MONGODB_URI)
+.then(() => console.log("MongoDB Connected Successfully"))
+.catch(err => console.error("MongoDB Connection Error:", err));
 
 // Database Schemas (Miundo ya Data)
 const userSchema = new mongoose.Schema({
@@ -43,11 +41,16 @@ const Message = mongoose.model('Message', messageSchema);
 // 1. KUJISAJILI
 app.post('/api/signup', async (req, res) => {
     try {
-        const { fullName, whatsappNumber, photoData, seeking } = req.body;
+        let { fullName, whatsappNumber, photoData, seeking } = req.body;
         
         const existingUser = await User.findOne({ whatsappNumber });
         if (existingUser) {
             return res.status(400).json({ error: "Namba hii ya simu/WhatsApp imeshajisajili tayari!" });
+        }
+
+        // Kama picha haipo au ni tupu, weka picha ya kawaida ya kupitisha muda
+        if (!photoData || photoData.trim() === "") {
+            photoData = "https://via.placeholder.com/150";
         }
 
         const count = await User.countDocuments();
@@ -55,14 +58,14 @@ app.post('/api/signup', async (req, res) => {
             id: count + 1,
             fullName,
             whatsappNumber,
-            photoData: photoData || "https://via.placeholder.com/150",
+            photoData: photoData,
             seeking: seeking || "Urafiki Tu"
         });
 
         await newUser.save();
         res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
     } catch (err) {
-        console.error(err);
+        console.error("Hitilafu wakati wa kusajili:", err);
         res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
     }
 });
@@ -82,7 +85,6 @@ app.get('/api/messages', async (req, res) => {
     try {
         const { sender, receiver } = req.query;
         
-        // Weka alama kuwa zimesomwa kama receiver ndiye anayezifungua
         await Message.updateMany(
             { sender: receiver, receiver: sender, read: false },
             { $set: { read: true } }
