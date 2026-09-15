@@ -327,9 +327,7 @@
                 <span>Meseji Mpya Zilizotumwa Kwako</span>
                 <button class="close-chat" onclick="closeUnreadModal()">&times;</button>
             </div>
-            <div id="unreadList" class="unread-list">
-                <!-- Orodha ya waliotuma meseji itaonekana hapa -->
-            </div>
+            <div id="unreadList" class="unread-list"></div>
         </div>
     </div>
 
@@ -391,8 +389,12 @@
             filtered.forEach(u => {
                 const card = document.createElement('div');
                 card.className = 'user-card';
+                
+                // Inakagua vyanzo vyote vinavyowezekana vya picha kwenye database
+                const userPhoto = u.photoData || u.photoUrl || u.photo || 'https://via.placeholder.com/250';
+
                 card.innerHTML = `
-                    <img src="${u.photoData || 'https://via.placeholder.com/250'}" alt="Picha">
+                    <img src="${userPhoto}" alt="Picha ya ${u.fullName}">
                     <h3>${u.fullName}</h3>
                     <p>Anatafuta: <b>${u.seeking || 'Urafiki Tu'}</b></p>
                     <button class="chat-btn" onclick="openChat('${u.whatsappNumber}', '${u.fullName}')">Anzisha Mazungumzo</button>
