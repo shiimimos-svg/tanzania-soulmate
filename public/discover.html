@@ -50,6 +50,24 @@
             gap: 15px;
         }
 
+        .unread-badge {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         .logout-btn {
             background: var(--primary);
             color: white;
@@ -70,7 +88,6 @@
             margin-bottom: 15px;
         }
 
-        /* Sehemu ya Makundi (Filter Tabs) */
         .filter-tabs {
             display: flex;
             gap: 10px;
@@ -140,8 +157,8 @@
             background: var(--primary-hover);
         }
 
-        /* Chat Modal */
-        .chat-modal {
+        /* Unread Popup Modal */
+        .unread-modal, .chat-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -154,15 +171,18 @@
             z-index: 2000;
         }
 
-        .chat-box {
+        .unread-box, .chat-box {
             background: white;
             width: 100%;
-            max-width: 450px;
-            height: 520px;
+            max-width: 420px;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        .chat-box {
+            height: 520px;
         }
 
         .chat-header {
@@ -181,6 +201,25 @@
             color: white;
             font-size: 20px;
             cursor: pointer;
+        }
+
+        .unread-list {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .unread-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
         }
 
         .chat-messages {
@@ -244,12 +283,6 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
-
-        .file-upload-btn:hover {
-            background: #d1d5db;
         }
 
         .chat-input-area button.send-btn {
@@ -268,6 +301,7 @@
     <header>
         <a href="#" class="logo">❤️ Tanzania<span>SoulMate</span></a>
         <div class="user-info">
+            <div id="unreadBadge" class="unread-badge" onclick="openUnreadModal()">💌 Meseji Mpya (0)</div>
             <span id="welcomeUser">Karibu</span>
             <button class="logout-btn" onclick="logout()">Toka (Log Out)</button>
         </div>
@@ -276,7 +310,6 @@
     <div class="container">
         <h2>Chagua Kundi Unalolitaka ❤️</h2>
         
-        <!-- Vifungo vya Makundi (Filter Tabs) -->
         <div class="filter-tabs">
             <button class="filter-btn active" onclick="filterUsers('Wote', this)">Wote</button>
             <button class="filter-btn" onclick="filterUsers('Mchumba wa Ndoa', this)">Mchumba wa Ndoa</button>
@@ -284,8 +317,19 @@
             <button class="filter-btn" onclick="filterUsers('Mahusiano ya Kawaida', this)">Mahusiano ya Kawaida</button>
         </div>
 
-        <div id="usersGrid" class="users-grid">
-            <!-- Watumiaji watajazwa hapa -->
+        <div id="usersGrid" class="users-grid"></div>
+    </div>
+
+    <!-- Unread Messages Modal -->
+    <div id="unreadModal" class="unread-modal">
+        <div class="unread-box">
+            <div class="chat-header">
+                <span>Meseji Mpya Zilizotumwa Kwako</span>
+                <button class="close-chat" onclick="closeUnreadModal()">&times;</button>
+            </div>
+            <div id="unreadList" class="unread-list">
+                <!-- Orodha ya waliotuma meseji itaonekana hapa -->
+            </div>
         </div>
     </div>
 
@@ -296,9 +340,7 @@
                 <span id="chatWithTitle">Mazungumzo</span>
                 <button class="close-chat" onclick="closeChat()">&times;</button>
             </div>
-            <div id="chatMessages" class="chat-messages">
-                <!-- Meseji zitaonekana hapa -->
-            </div>
+            <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input-area">
                 <label for="imageInput" class="file-upload-btn" title="Ambata Picha">📷</label>
                 <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="previewImage(this)">
@@ -324,6 +366,7 @@
         let allUsers = [];
         let activeChatUserPhone = null;
         let selectedImageBase64 = null;
+        let unreadDataList = [];
 
         async function loadUsers() {
             try {
@@ -338,7 +381,6 @@
         function displayUsers(usersToDisplay) {
             const grid = document.getElementById('usersGrid');
             grid.innerHTML = '';
-
             let filtered = usersToDisplay.filter(u => u.whatsappNumber !== currentUser.whatsappNumber);
 
             if (filtered.length === 0) {
@@ -360,7 +402,6 @@
         }
 
         function filterUsers(category, btnElement) {
-            // Badilisha muonekano wa kitufe kilichochaguliwa (active tab)
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             btnElement.classList.add('active');
 
@@ -370,6 +411,57 @@
                 const filtered = allUsers.filter(u => u.seeking === category);
                 displayUsers(filtered);
             }
+        }
+
+        async function checkUnreadMessages() {
+            try {
+                const res = await fetch(`/api/messages/unread?user=${currentUser.whatsappNumber}`);
+                unreadDataList = await res.json();
+                const badge = document.getElementById('unreadBadge');
+
+                let totalUnread = unreadDataList.reduce((sum, item) => sum + item.count, 0);
+
+                if (totalUnread > 0) {
+                    badge.innerText = `💌 Meseji Mpya (${totalUnread})`;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Hitilafu ya kukagua unread", err);
+            }
+        }
+
+        function openUnreadModal() {
+            const listContainer = document.getElementById('unreadList');
+            listContainer.innerHTML = '';
+
+            if (unreadDataList.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#6b7280;">Hakuna ujumbe mpya.</p>';
+            } else {
+                unreadDataList.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'unread-item';
+                    div.innerHTML = `
+                        <div>
+                            <b>${item.senderName}</b><br>
+                            <span style="font-size: 12px; color: #6b7280;">Ujumbe (${item.count}) haujasomwa</span>
+                        </div>
+                        <button class="chat-btn" style="padding: 6px 12px; font-size: 12px;" onclick="openChatFromUnread('${item.senderPhone}', '${item.senderName}')">Soma</button>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            }
+            document.getElementById('unreadModal').style.display = 'flex';
+        }
+
+        function closeUnreadModal() {
+            document.getElementById('unreadModal').style.display = 'none';
+        }
+
+        function openChatFromUnread(phone, name) {
+            closeUnreadModal();
+            openChat(phone, name);
         }
 
         function openChat(phone, name) {
@@ -383,6 +475,7 @@
             document.getElementById('chatModal').style.display = 'none';
             activeChatUserPhone = null;
             clearImage();
+            checkUnreadMessages();
         }
 
         function previewImage(input) {
@@ -416,16 +509,13 @@
                     div.className = `message ${m.sender === currentUser.whatsappNumber ? 'outgoing' : 'incoming'}`;
                     
                     let content = '';
-                    if (m.text) {
-                        content += `<div>${m.text}</div>`;
-                    }
-                    if (m.photoData) {
-                        content += `<img src="${m.photoData}" alt="Imetumwa picha">`;
-                    }
+                    if (m.text) content += `<div>${m.text}</div>`;
+                    if (m.photoData) content += `<img src="${m.photoData}" alt="Picha">`;
                     div.innerHTML = content;
                     container.appendChild(div);
                 });
                 container.scrollTop = container.scrollHeight;
+                checkUnreadMessages();
             } catch (err) {
                 console.error("Hitilafu ya kupata meseji", err);
             }
@@ -448,14 +538,10 @@
                     })
                 });
 
-                const data = await res.json();
-
                 if (res.ok) {
                     input.value = '';
                     clearImage();
                     loadMessages();
-                } else {
-                    alert(data.error || "Imeshindikana kutuma ujumbe.");
                 }
             } catch (err) {
                 console.error("Hitilafu ya kutuma meseji", err);
@@ -463,9 +549,7 @@
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            if (e.key === 'Enter') sendMessage();
         }
 
         function logout() {
@@ -474,8 +558,10 @@
         }
 
         loadUsers();
+        checkUnreadMessages();
 
         setInterval(() => {
+            checkUnreadMessages();
             if (activeChatUserPhone) {
                 loadMessages();
             }
