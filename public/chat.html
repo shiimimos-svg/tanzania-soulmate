@@ -70,21 +70,36 @@
             color: #333;
             align-self: flex-start;
         }
+        .message img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
         .chat-input-area {
             padding: 15px;
             background: white;
             border-top: 1px solid #eee;
             display: flex;
             gap: 10px;
+            align-items: center;
         }
-        .chat-input-area input {
+        .chat-input-area input[type="text"] {
             flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
             outline: none;
         }
-        .chat-input-area button {
+        .file-upload-btn {
+            background: #e5e7eb;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .chat-input-area button.send-btn {
             background: #d63384;
             color: white;
             border: none;
@@ -118,16 +133,24 @@
         <div class="chat-header">
             <button class="back-btn" onclick="window.location.href='discover.html'">Rudi</button>
             <h3 id="chatTitle">Chat</h3>
-            <span id="msgCount" style="font-size: 12px;">Meseji: 5</span>
+            <span id="msgCount" style="font-size: 12px;">Zilizobaki: 5</span>
         </div>
 
         <div class="chat-messages" id="chatMessages">
             <!-- Meseji zitaingia hapa -->
         </div>
 
+        <div id="imagePreviewContainer" style="padding: 5px 15px; background: #eee; display: none; font-size: 12px; align-items: center; justify-content: space-between;">
+            <span id="fileName">Picha imeteuliwa</span>
+            <button onclick="clearImage()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">Ondoa</button>
+        </div>
+
         <div id="inputArea" class="chat-input-area">
-            <input type="text5" id="messageInput" placeholder="Andika ujumbe wako..." autocomplete="off">
-            <button onclick="sendMessage()">Tuma</button>
+            <label for="imageInput" class="file-upload-btn" title="Ambata Picha">📷</label>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="previewImage(this)">
+            
+            <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." autocomplete="off" onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Tuma</button>
         </div>
 
         <div id="lockedArea" class="locked-overlay" style="display: none;">
@@ -142,12 +165,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const receiverId = urlParams.get('id');
         const receiverName = urlParams.get('name');
+        let selectedImageBase64 = null;
 
         if (!currentUser || !receiverId) {
             window.location.href = 'discover.html';
         }
 
-        document.getElementById('chatTitle').innerText = receiverName || 'Mazungumzo';
+        document.getElementById('chatTitle').innerText = receiverName ? `Chat na ${receiverName}` : 'Mazungumzo';
 
         async function loadMessages() {
             try {
@@ -160,12 +184,20 @@
                 data.messages.forEach(m => {
                     const div = document.createElement('div');
                     div.className = `message ${m.senderId == currentUser.id ? 'sent' : 'received'}`;
-                    div.innerText = m.text;
+                    
+                    let content = '';
+                    if (m.text) content += `<div>${m.text}</div>`;
+                    if (m.photoData) content += `<img src="${m.photoData}" alt="Picha">`;
+                    div.innerHTML = content;
                     container.appendChild(div);
                 });
 
                 container.scrollTop = container.scrollHeight;
                 document.getElementById('msgCount').innerText = `Zilizobaki: ${data.freeMessagesLeft}`;
+
+                // Hifadhi freeMessagesLeft mpya kwenye localStorage
+                currentUser.freeMessagesLeft = data.freeMessagesLeft;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
                 if (!data.isAllowed) {
                     document.getElementById('inputArea').style.display = 'none';
@@ -179,10 +211,28 @@
             }
         }
 
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageBase64 = e.target.result;
+                    document.getElementById('fileName').innerText = `Picha: ${input.files[0].name}`;
+                    document.getElementById('imagePreviewContainer').style.display = 'flex';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearImage() {
+            selectedImageBase64 = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+        }
+
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text && !selectedImageBase64) return;
 
             try {
                 const res = await fetch('/api/chat/send', {
@@ -191,13 +241,15 @@
                     body: JSON.stringify({
                         senderId: currentUser.id,
                         receiverId: receiverId,
-                        text: text
+                        text: text,
+                        photoData: selectedImageBase64
                     })
                 });
                 const data = await res.json();
 
                 if (res.ok) {
                     input.value = '';
+                    clearImage();
                     currentUser.freeMessagesLeft = data.freeMessagesLeft;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     loadMessages();
@@ -211,6 +263,10 @@
             } catch (err) {
                 alert("Imeshindikana kutuma ujumbe.");
             }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
         }
 
         async function paySubscription() {
