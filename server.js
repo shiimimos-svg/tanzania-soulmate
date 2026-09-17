@@ -22,13 +22,18 @@ const userSchema = new mongoose.Schema({
     id: Number,
     fullName: String,
     whatsappNumber: { type: String, unique: true, index: true },
-    photoData: String,
+    photoData: String, // Picha kuu (Profile Picture)
+    extraPhotos: { type: [String], default: [] }, // Picha za ziada (hadi 4)
     seeking: String,
     bio: { type: String, default: "Mtu mzuri ninayependa mazungumzo ya maana." },
     region: { type: String, default: "Dar es Salaam" },
     age: { type: Number, default: 25 },
     freeMessagesLeft: { type: Number, default: 5 },
-    subscriptionExpiresAt: { type: Date, default: null }
+    subscriptionExpiresAt: { type: Date, default: null },
+    // Vipengele vya OTP na Uhakiki
+    otpCode: String,
+    otpExpires: Date,
+    isVerified: { type: Boolean, default: false }
 });
 
 const messageSchema = new mongoose.Schema({
@@ -53,35 +58,102 @@ function sanitizePhoneNumber(phone) {
     return cleaned;
 }
 
+// 1. API ya Kutuma OTP (Wakati wa Kusajili au Kuingia)
+app.post('/api/auth/send-otp', async (req, res) => {
+    try {
+        let { whatsappNumber } = req.body;
+        whatsappNumber = sanitizePhoneNumber(whatsappNumber);
+
+        if (!whatsappNumber) {
+            return res.status(400).json({ error: "Tafadhali jaza namba ya WhatsApp." });
+        }
+
+        const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // Dakika 10
+
+        let user = await User.findOne({ whatsappNumber });
+        if (!user) {
+            const count = await User.countDocuments();
+            user = new User({
+                id: count + 1,
+                whatsappNumber,
+                fullName: "Mtumiaji Mpya",
+                otpCode,
+                otpExpires,
+                isVerified: false
+            });
+        } else {
+            user.otpCode = otpCode;
+            user.otpExpires = otpExpires;
+        }
+
+        await user.save();
+        console.log(`[OTP] Namba ya usalama ya ${whatsappNumber} ni: ${otpCode}`);
+
+        res.json({ 
+            success: true, 
+            message: "OTP imetumwa mafanikio!", 
+            debugOtp: otpCode 
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Imeshindikana kutuma OTP." });
+    }
+});
+
+// 2. API ya Kuhakiki OTP
+app.post('/api/auth/verify-otp', async (req, res) => {
+    try {
+        let { whatsappNumber, otpCode } = req.body;
+        whatsappNumber = sanitizePhoneNumber(whatsappNumber);
+
+        const user = await User.findOne({ whatsappNumber });
+        if (!user) {
+            return res.status(404).json({ error: "Mtumiaji hajapatikana." });
+        }
+
+        if (!user.otpCode || user.otpCode !== otpCode) {
+            return res.status(400).json({ error: "Namba ya OTP si sahihi!" });
+        }
+
+        if (user.otpExpires && new Date() > new Date(user.otpExpires)) {
+            return res.status(400).json({ error: "Muda wa OTP umeisha. Omba nyingine." });
+        }
+
+        user.isVerified = true;
+        user.otpCode = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, message: "Namba imethibitishwa!", user });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu wakati wa kuhakiki OTP." });
+    }
+});
+
+// 3. API ya Kukamilisha Usajili Baada ya OTP
 app.post('/api/signup', async (req, res) => {
     try {
         let { fullName, whatsappNumber, photoData, seeking, region, age } = req.body;
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
 
-        const existingUser = await User.findOne({ whatsappNumber });
-        if (existingUser) {
-            return res.status(400).json({ error: "Namba hii ya simu/WhatsApp imeshajisajili tayari!" });
+        let user = await User.findOne({ whatsappNumber });
+        if (!user) {
+            return res.status(404).json({ error: "Tafadhali thibitisha namba yako kwanza." });
         }
 
         if (!photoData || photoData.trim() === "") {
             photoData = "https://via.placeholder.com/150";
         }
 
-        const count = await User.countDocuments();
-        const newUser = new User({
-            id: count + 1,
-            fullName,
-            whatsappNumber,
-            photoData,
-            seeking: seeking || "Mchumba wa Ndoa",
-            region: region || "Dar es Salaam",
-            age: age || 25,
-            freeMessagesLeft: 5,
-            subscriptionExpiresAt: null
-        });
+        user.fullName = fullName;
+        user.photoData = photoData;
+        user.seeking = seeking || "Mchumba wa Ndoa";
+        user.region = region || "Dar es Salaam";
+        user.age = age || 25;
+        user.isVerified = true;
 
-        await newUser.save();
-        res.status(201).json({ message: "Umefanikiwa kujisajili Tanzania Soul Mate!", user: newUser });
+        await user.save();
+        res.status(201).json({ message: "Umefanikiwa kujisajili Tanzania Soul Mate!", user });
     } catch (err) {
         res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
     }
@@ -102,7 +174,26 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Imesasishwa ili kupokea vigezo vya kuchuja (region, minAge, maxAge, seeking)
+// 4. API ya Kuongeza Picha za Ziada
+app.post('/api/user/add-photo', async (req, res) => {
+    try {
+        const { userId, photoData } = req.body;
+        const user = await User.findOne({ id: Number(userId) });
+        if (!user) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
+
+        if (!user.extraPhotos) user.extraPhotos = [];
+        if (user.extraPhotos.length >= 4) {
+            return res.status(400).json({ error: "Unaweza kuweka picha za ziada zisizozidi 4 tu." });
+        }
+
+        user.extraPhotos.push(photoData);
+        await user.save();
+        res.json({ success: true, extraPhotos: user.extraPhotos });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu wakati wa kuhifadhi picha." });
+    }
+});
+
 app.get('/api/admin/users', async (req, res) => {
     try {
         const { region, minAge, maxAge, seeking } = req.query;
