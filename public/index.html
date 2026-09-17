@@ -9,8 +9,8 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { 
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), 
+                        url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -20,7 +20,7 @@
             align-items: center; 
             min-height: 100vh; 
         }
-        .container { width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; position: relative; }
+        .container { width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px); min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.25); display: flex; flex-direction: column; position: relative; }
         @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
 
         .page-section { display: none; flex: 1; flex-direction: column; padding: 30px; animation: fadeIn 0.4s ease-in-out; }
@@ -171,7 +171,6 @@
         }
     }
 
-    // Hatua ya 1 ya OTP wakati wa kusajili
     async function requestSignupOtp() {
         const alertBox = document.getElementById('signupAlert');
         const phone = document.getElementById('signupPhone').value.trim();
@@ -211,7 +210,6 @@
         }
     }
 
-    // Hatua ya 2: Kuhakiki OTP na Kamilisha Usajili
     async function handleSignup() {
         const alertBox = document.getElementById('signupAlert');
         const otpCode = document.getElementById('signupOtp').value.trim();
@@ -224,7 +222,6 @@
         }
 
         try {
-            // Kwanza hakiki OTP
             const verifyRes = await fetch('/api/auth/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -239,7 +236,6 @@
                 return;
             }
 
-            // Baada ya OTP kukubaliwa, tuma taarifa kamili za usajili
             const payload = {
                 fullName: document.getElementById('signupName').value,
                 whatsappNumber: verifiedPhoneNumber,
