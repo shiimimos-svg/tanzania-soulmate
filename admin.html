@@ -3,116 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Admin Panel</title>
+    <title>BongoHearts - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #fff0f3;
-            margin: 0;
-            padding: 20px;
-            color: #111827;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        h2 {
-            color: #d63384;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background: #f9fafb;
-        }
-        img.user-img {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-        .delete-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f4f6f9; color: #333; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 900px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        
+        .admin-header { background: #111; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h2 { font-size: 20px; font-weight: 700; color: #ff3366; }
+
+        .admin-body { padding: 20px; flex: 1; overflow-y: auto; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee; text-align: center; }
+        .stat-card h3 { font-size: 24px; color: #ff3366; margin-bottom: 5px; font-weight: 700; }
+        .stat-card p { font-size: 13px; color: #666; font-weight: 500; }
+
+        h3.section-title { font-size: 16px; margin-bottom: 15px; color: #222; font-weight: 600; }
+
+        .users-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #eee; }
+        .users-table th, .users-table td { padding: 12px 15px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .users-table th { background: #fafafa; color: #555; font-weight: 600; }
+        .users-table tr:hover { background: #fdf2f4; }
+        .user-avatar-sm { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Orodha ya Watumiaji Wote - TanzaniaSoulMate ❤️</h2>
-        <p style="text-align: center; color: #4b5563;">Watumiaji wanaonekana hapa moja kwa moja bila uhakiki wowote.</p>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Picha</th>
-                    <th>Jina Kamili</th>
-                    <th>WhatsApp</th>
-                    <th>Anatafuta</th>
-                    <th>Kitendo</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody">
-                <tr><td colspan="5" style="text-align: center;">Inapakia...</td></tr>
-            </tbody>
-        </table>
+
+<div class="container">
+    
+    <div class="admin-header">
+        <h2><i class="fa-solid fa-shield-halved"></i> BongoHearts Admin</h2>
+        <a href="discover.html" style="color: white; font-size: 13px; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Rudi Kwenye App</a>
     </div>
 
-    <script>
-        async function fetchUsers() {
-            try {
-                const res = await fetch('/api/admin/users');
-                const users = await res.json();
-                const tbody = document.getElementById('userTableBody');
-                tbody.innerHTML = '';
+    <div class="admin-body">
+        
+        <!-- KADI ZA TAKWIMU (Hatua ya 10) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="statTotalUsers">0</h3>
+                <p>Watumiaji Wote</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statActiveUsers">0</h3>
+                <p>Watumiaji Hai</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statPaidUsers">0</h3>
+                <p>Waliojitokeza (Siku 5)</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statRevenue">TZS 0</h3>
+                <p>Mapato (TZS 2,000/-)</p>
+            </div>
+        </div>
 
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Hakuna watumiaji waliyojisajili bado.</td></tr>';
-                    return;
+        <h3 class="section-title"><i class="fa-solid fa-users"></i> Orodha ya Watumiaji Waliopo Kwenye Mfumo</h3>
+        
+        <div style="overflow-x: auto;">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Jina</th>
+                        <th>Namba ya WhatsApp</th>
+                        <th>Mkoa</th>
+                        <th>Ujumbe Uliobakia</th>
+                        <th>Hali ya Usajili (Siku 5)</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                    <!-- Watumiaji watajazwa hapa kupitia JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    async function loadAdminData() {
+        try {
+            // Kupata Takwimu
+            const statsRes = await fetch('/api/admin/stats');
+            const stats = await statsRes.json();
+            
+            if (statsRes.ok) {
+                document.getElementById('statTotalUsers').innerText = stats.totalUsers;
+                document.getElementById('statActiveUsers').innerText = stats.activeUsers;
+                document.getElementById('statPaidUsers').innerText = stats.paidUsers;
+                document.getElementById('statRevenue').innerText = "TZS " + stats.revenue.toLocaleString();
+            }
+
+            // Kupata Orodha ya Watumiaji
+            const usersRes = await fetch('/api/admin/users');
+            const users = await usersRes.json();
+            
+            const tbody = document.getElementById('adminUsersTableBody');
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Hakuna watumiaji waliojisajili bado.</td></tr>`;
+                return;
+            }
+
+            users.forEach(u => {
+                const now = new Date();
+                let subText = "Bure (" + u.freeMessagesLeft + " zimebakia)";
+                if (u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > now) {
+                    subText = "Amelipia (Siku 5)";
                 }
 
-                users.forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><img src="${u.photoData || 'https://via.placeholder.com/50'}" class="user-img" alt="Picha"></td>
-                        <td>${u.fullName}</td>
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${u.photoData || 'https://via.placeholder.com/150'}" class="user-avatar-sm">${u.fullName}</td>
                         <td>${u.whatsappNumber}</td>
-                        <td>${u.seeking || 'Urafiki Tu'}</td>
-                        <td><button class="delete-btn" onclick="deleteUser('${u.whatsappNumber}')">Futa</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error("Imeshindikana kupakia", err);
-            }
-        }
+                        <td>${u.region || 'Dar es Salaam'}</td>
+                        <td>${u.freeMessagesLeft}</td>
+                        <td><span style="font-weight:600; color: ${u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > now ? '#2e7d32' : '#e65100'};">${subText}</span></td>
+                    </tr>
+                `;
+            });
 
-        async function deleteUser(phone) {
-            if (confirm("Una uhakika unataka kumfuta mtumiaji huyu?")) {
-                // Kama unahitaji kuongeza route ya kufuta hapo mbeleni unaweza kuiweka, kwa sasa hii inaonyesha tu orodha.
-                alert("Kazi imefanyika.");
-                fetchUsers();
-            }
+        } catch (err) {
+            console.error("Hitilafu kupakia takwimu za admin", err);
         }
+    }
 
-        fetchUsers();
-    </script>
+    loadAdminData();
+</script>
+
 </body>
 </html>
