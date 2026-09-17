@@ -20,8 +20,22 @@
         .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 18px; display: inline-flex; align-items: center; }
         .notification-icon-wrapper:hover { color: #ff3366; }
         
-        /* Alama ya Kitone Chekundu (Badge) */
-        .unread-badge { position: absolute; top: -5px; right: -6px; width: 10px; height: 10px; background-color: #ff3366; border-radius: 50%; border: 2px solid #fff; display: none; }
+        /* Badji ya Kuonyesha Idadi ya Ujumbe (Namba) */
+        .unread-badge { 
+            position: absolute; 
+            top: -8px; 
+            right: -10px; 
+            background-color: #ff3366; 
+            color: white; 
+            font-size: 10px; 
+            font-weight: 600; 
+            padding: 2px 5px; 
+            border-radius: 10px; 
+            border: 2px solid #fff; 
+            display: none; 
+            min-width: 18px; 
+            text-align: center; 
+        }
 
         .logout-btn { cursor: pointer; color: #555; font-size: 18px; }
         .logout-btn:hover { color: #ff3366; }
@@ -165,10 +179,10 @@
         }
     }
 
+    // Function ya kuweka idadi halisi ya jumbe ambazo hazijasomwa kwenye badge
     async function checkUnreadMessages() {
         try {
             if (!currentUser) return;
-            // Tunatuma ID au Namba ya simu kutegemeana na ipo wapi
             const identifier = currentUser.id || currentUser.whatsappNumber;
             if (!identifier) return;
 
@@ -177,14 +191,16 @@
                 const data = await res.json();
                 const badge = document.getElementById('unreadBadge');
                 
-                if (data.hasUnread) {
-                    badge.style.display = 'block';
+                if (data.count > 0) {
+                    // Ikiwa idadi ni kubwa kuliko 99, inaweka "99+", vinginevyo inaweka namba husika (mfano: 20)
+                    badge.innerText = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'inline-block';
                 } else {
                     badge.style.display = 'none';
                 }
             }
         } catch (err) {
-            console.log("Imeshindikana kuangalia ujumbe mpya:", err);
+            console.log("Imeshindikana kuangalia idadi ya ujumbe:", err);
         }
     }
 
