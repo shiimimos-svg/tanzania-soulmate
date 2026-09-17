@@ -38,12 +38,14 @@
 
         .alert-msg { padding: 10px 15px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; display: none; }
         .alert-error { background: #ffebee; color: #c62828; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
 <div class="container">
     
+    <!-- Landing Page -->
     <div id="landingPage" class="page-section active">
         <div class="landing-hero">
             <i class="fa-solid fa-heart"></i>
@@ -54,22 +56,32 @@
         </div>
     </div>
 
+    <!-- Signup Page na Hatua ya OTP -->
     <div id="signupPage" class="page-section">
         <a class="back-link" onclick="showPage('landingPage')"><i class="fa-solid fa-arrow-left"></i> Rudi Nyuma</a>
         <h2>Fungua Akaunti</h2>
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Jaza taarifa zako za Tanzania Soul Mate.</p>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Jaza namba yako ya simu ili kutumiwa OTP ya usalama.</p>
         
         <div id="signupAlert" class="alert-msg"></div>
 
-        <form id="signupForm" onsubmit="handleSignup(event)">
-            <div class="form-group">
-                <label>Jina Lako Kamili</label>
-                <input type="text" id="signupName" class="form-control" placeholder="Mf. Juma Ally" required>
-            </div>
-            
+        <!-- Hatua ya 1: Kuweka Namba ya Simu kuomba OTP -->
+        <div id="signupPhoneStep">
             <div class="form-group">
                 <label>Namba ya WhatsApp</label>
                 <input type="text" id="signupPhone" class="form-control" placeholder="Mf. 0712345678" required>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="requestSignupOtp()">Tuma Namba ya Siri (OTP)</button>
+        </div>
+
+        <!-- Hatua ya 2: Kujaza OTP na Taarifa Kamili -->
+        <div id="signupDetailsStep" style="display: none;">
+            <div class="form-group">
+                <label>Namba ya Siri (OTP)</label>
+                <input type="text" id="signupOtp" class="form-control" placeholder="Weka tarakimu 4 ulizopokea" required>
+            </div>
+            <div class="form-group">
+                <label>Jina Lako Kamili</label>
+                <input type="text" id="signupName" class="form-control" placeholder="Mf. Juma Ally" required>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -101,14 +113,15 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Malizia Usajili</button>
-        </form>
+            <button type="button" class="btn btn-primary" onclick="handleSignup()">Thibitisha na Malizia</button>
+        </div>
     </div>
 
+    <!-- Login Page -->
     <div id="loginPage" class="page-section">
         <a class="back-link" onclick="showPage('landingPage')"><i class="fa-solid fa-arrow-left"></i> Rudi Nyuma</a>
         <h2>Karibu Tena</h2>
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Ingiza namba yako ya WhatsApp.</p>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Ingiza namba yako ya WhatsApp kuingia.</p>
 
         <div id="loginAlert" class="alert-msg"></div>
 
@@ -125,6 +138,7 @@
 
 <script>
     let base64PhotoString = "";
+    let verifiedPhoneNumber = "";
 
     function showPage(pageId) {
         document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -146,20 +160,84 @@
         }
     }
 
-    async function handleSignup(e) {
-        e.preventDefault();
+    // Hatua ya 1 ya OTP wakati wa kusajili
+    async function requestSignupOtp() {
         const alertBox = document.getElementById('signupAlert');
-        
-        const payload = {
-            fullName: document.getElementById('signupName').value,
-            whatsappNumber: document.getElementById('signupPhone').value,
-            age: parseInt(document.getElementById('signupAge').value),
-            region: document.getElementById('signupRegion').value,
-            seeking: document.getElementById('signupSeeking').value,
-            photoData: base64PhotoString
-        };
+        const phone = document.getElementById('signupPhone').value.trim();
+
+        if (!phone) {
+            alertBox.className = "alert-msg alert-error";
+            alertBox.innerText = "Tafadhali jaza namba ya simu.";
+            alertBox.style.display = "block";
+            return;
+        }
 
         try {
+            const response = await fetch('/api/auth/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ whatsappNumber: phone })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                verifiedPhoneNumber = phone;
+                alertBox.className = "alert-msg alert-success";
+                alertBox.innerText = "OTP imetumwa! (Jaribio la OTP yako ni: " + data.debugOtp + ")";
+                alertBox.style.display = "block";
+
+                document.getElementById('signupPhoneStep').style.display = 'none';
+                document.getElementById('signupDetailsStep').style.display = 'block';
+            } else {
+                alertBox.className = "alert-msg alert-error";
+                alertBox.innerText = data.error;
+                alertBox.style.display = "block";
+            }
+        } catch (err) {
+            alertBox.className = "alert-msg alert-error";
+            alertBox.innerText = "Hitilafu ya mtandao wakati wa kutuma OTP.";
+            alertBox.style.display = "block";
+        }
+    }
+
+    // Hatua ya 2: Kuhakiki OTP na Kamilisha Usajili
+    async function handleSignup() {
+        const alertBox = document.getElementById('signupAlert');
+        const otpCode = document.getElementById('signupOtp').value.trim();
+
+        if (!otpCode) {
+            alertBox.className = "alert-msg alert-error";
+            alertBox.innerText = "Tafadhali weka namba ya OTP.";
+            alertBox.style.display = "block";
+            return;
+        }
+
+        try {
+            // Kwanza hakiki OTP
+            const verifyRes = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ whatsappNumber: verifiedPhoneNumber, otpCode })
+            });
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok) {
+                alertBox.className = "alert-msg alert-error";
+                alertBox.innerText = verifyData.error;
+                alertBox.style.display = "block";
+                return;
+            }
+
+            // Baada ya OTP kukubaliwa, tuma taarifa kamili za usajili
+            const payload = {
+                fullName: document.getElementById('signupName').value,
+                whatsappNumber: verifiedPhoneNumber,
+                age: parseInt(document.getElementById('signupAge').value),
+                region: document.getElementById('signupRegion').value,
+                seeking: document.getElementById('signupSeeking').value,
+                photoData: base64PhotoString
+            };
+
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -212,4 +290,3 @@
 </script>
 
 </body>
-</html>
