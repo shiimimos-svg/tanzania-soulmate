@@ -17,9 +17,10 @@
         .header h2 { font-size: 20px; color: #ff3366; font-weight: 700; }
         .header-icons { display: flex; gap: 18px; align-items: center; }
         
-        /* Icon ya Kengele yenye Badge ya Ujumbe */
         .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 18px; display: inline-flex; align-items: center; }
         .notification-icon-wrapper:hover { color: #ff3366; }
+        
+        /* Alama ya Kitone Chekundu (Badge) */
         .unread-badge { position: absolute; top: -5px; right: -6px; width: 10px; height: 10px; background-color: #ff3366; border-radius: 50%; border: 2px solid #fff; display: none; }
 
         .logout-btn { cursor: pointer; color: #555; font-size: 18px; }
@@ -117,7 +118,7 @@
         }
         currentUser = JSON.parse(userStr);
         loadUsers();
-        checkUnreadMessages(); // Inachunguza ujumbe mpya mara tu ukurasa unapofunguka
+        checkUnreadMessages(); 
     };
 
     async function loadUsers() {
@@ -131,8 +132,6 @@
             const users = await res.json();
 
             container.innerHTML = "";
-
-            // Chuja ili mtumiaji asijionyeshe mwenyewe kwenye orodha
             const filteredUsers = users.filter(u => u.whatsappNumber !== currentUser.whatsappNumber);
 
             if (filteredUsers.length === 0) {
@@ -166,18 +165,18 @@
         }
     }
 
-    // Function ya kuangalia kama kuna ujumbe ambao haujasomwa kutoka kwenye Backend
     async function checkUnreadMessages() {
         try {
-            if (!currentUser || (!currentUser._id && !currentUser.id)) return;
-            const userId = currentUser._id || currentUser.id;
+            if (!currentUser) return;
+            // Tunatuma ID au Namba ya simu kutegemeana na ipo wapi
+            const identifier = currentUser.id || currentUser.whatsappNumber;
+            if (!identifier) return;
 
-            const res = await fetch(`/api/messages/unread-count?userId=${userId}`);
+            const res = await fetch(`/api/messages/unread-count?userId=${identifier}`);
             if (res.ok) {
                 const data = await res.json();
                 const badge = document.getElementById('unreadBadge');
                 
-                // Ikiwa kuna ujumbe mpya, kitone chekundu kitatokea juu ya kengele
                 if (data.hasUnread) {
                     badge.style.display = 'block';
                 } else {
