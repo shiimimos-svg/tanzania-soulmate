@@ -3,298 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mazungumzo - TanzaniaSoulMate</title>
+    <title>Mazungumzo - Tanzania Soul Mate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background: #fff0f3;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .chat-container {
-            background: white;
-            width: 100%;
-            max-width: 600px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
-            overflow: hidden;
-        }
-        .chat-header {
-            background: #d63384;
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .chat-header h3 {
-            margin: 0;
-        }
-        .back-btn {
-            background: white;
-            color: #d63384;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #fafafa;
-        }
-        .message {
-            max-width: 70%;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            word-break: break-word;
-        }
-        .message.sent {
-            background: #d63384;
-            color: white;
-            align-self: flex-end;
-        }
-        .message.received {
-            background: #e5e5ea;
-            color: #333;
-            align-self: flex-start;
-        }
-        .message img {
-            max-width: 100%;
-            border-radius: 6px;
-            margin-top: 5px;
-        }
-        .chat-input-area {
-            padding: 15px;
-            background: white;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .chat-input-area input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            outline: none;
-        }
-        .file-upload-btn {
-            background: #e5e7eb;
-            color: #333;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .chat-input-area button.send-btn {
-            background: #d63384;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .locked-overlay {
-            background: #fff0f3;
-            color: #d63384;
-            padding: 20px;
-            text-align: center;
-            border-top: 1px solid #ffccd5;
-            font-weight: bold;
-        }
-        .locked-overlay button {
-            background: #25d366;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
+        @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
+
+        /* Chat Header */
+        .chat-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 10; }
+        .chat-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .chat-header-info h3 { font-size: 16px; font-weight: 600; color: #111; }
+        .chat-header-info p { font-size: 11px; color: #666; }
+        .back-btn { font-size: 18px; color: #555; cursor: pointer; text-decoration: none; }
+
+        /* Messages Area */
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #fafafa; padding-bottom: 80px; }
+        .message { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; position: relative; word-break: break-word; }
+        .message.sent { background: #ff3366; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .message.received { background: #fff; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #eee; }
+        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+
+        /* Chat Input Area */
+        .chat-input-area { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #eee; padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; outline: none; }
+        .chat-input-area button { background: #ff3366; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+        /* Paywall Modal */
+        .paywall-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        .paywall-content { background: white; padding: 30px; border-radius: 16px; text-align: center; width: 100%; max-width: 350px; }
+        .paywall-content h3 { color: #ff3366; margin-bottom: 10px; font-size: 20px; }
+        .paywall-content p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .btn-pay { background: #2e7d32; color: white; width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <button class="back-btn" onclick="window.location.href='discover.html'">Rudi</button>
-            <h3 id="chatTitle">Chat</h3>
-            <span id="msgCount" style="font-size: 12px;">Zilizobaki: 5</span>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-            <!-- Meseji zitaingia hapa -->
-        </div>
-
-        <div id="imagePreviewContainer" style="padding: 5px 15px; background: #eee; display: none; font-size: 12px; align-items: center; justify-content: space-between;">
-            <span id="fileName">Picha imeteuliwa</span>
-            <button onclick="clearImage()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">Ondoa</button>
-        </div>
-
-        <div id="inputArea" class="chat-input-area">
-            <label for="imageInput" class="file-upload-btn" title="Ambata Picha">📷</label>
-            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="previewImage(this)">
-            
-            <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." autocomplete="off" onkeypress="handleKeyPress(event)">
-            <button class="send-btn" onclick="sendMessage()">Tuma</button>
-        </div>
-
-        <div id="lockedArea" class="locked-overlay" style="display: none;">
-            Ujumbe wako wa bure umeisha! Tafadhali lipa TZS 2,000 kwa siku 5 ili uendelee kuchati.
-            <br>
-            <button onclick="paySubscription()">Lipa Sasa (TZS 2,000)</button>
+<div class="container">
+    
+    <!-- Header -->
+    <div class="chat-header">
+        <a href="discover.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+        <img id="receiverPhoto" src="https://via.placeholder.com/150" alt="Avatar">
+        <div class="chat-header-info">
+            <h3 id="receiverName">Inapakia...</h3>
+            <p id="chatStatus">Ujumbe wa bure uliosalia: <span id="freeCount">5</span></p>
         </div>
     </div>
 
-    <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const urlParams = new URLSearchParams(window.location.search);
-        const receiverId = urlParams.get('id');
-        const receiverName = urlParams.get('name');
-        let selectedImageBase64 = null;
+    <!-- Messages Container -->
+    <div class="chat-messages" id="messagesContainer">
+        <!-- Sehemu ya Ujumbe -->
+    </div>
 
-        if (!currentUser || !receiverId) {
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
+    <!-- Paywall Modal -->
+    <div id="paywallModal" class="paywall-modal">
+        <div class="paywall-content">
+            <h3>Ujumbe Wako Umeisha!</h3>
+            <p>Ujumbe wako wa bure umeisha. Lipa <b>TZS 2,000</b> kupitia M-Pesa/TigoPesa kwenda namba <b>0760000000</b> kisha bonyeza kitufe hapa chini kuendelea kuchati kwa siku 5 mfululizo.</p>
+            <button class="btn-pay" onclick="simulatePayment()">Thibitisha Malipo (TZS 2,000)</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentUser = null;
+    let receiverId = null;
+    let receiverUser = null;
+
+    window.onload = async function() {
+        const userStr = localStorage.getItem('soulmateUser');
+        if (!userStr) {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = JSON.parse(userStr);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        receiverId = urlParams.get('receiverId');
+
+        if (!receiverId) {
             window.location.href = 'discover.html';
+            return;
         }
 
-        document.getElementById('chatTitle').innerText = receiverName ? `Chat na ${receiverName}` : 'Mazungumzo';
+        await fetchReceiverInfo();
+        await loadMessages();
 
-        async function loadMessages() {
-            try {
-                const res = await fetch(`/api/chat/${currentUser.id}/${receiverId}`);
-                const data = await res.json();
+        // Endelea kukagua ujumbe mpya kila baada ya sekunde 3
+        setInterval(loadMessages, 3000);
+    };
 
-                const container = document.getElementById('chatMessages');
-                container.innerHTML = '';
+    async function fetchReceiverInfo() {
+        try {
+            const res = await fetch(`/api/admin/users`);
+            const users = await res.json();
+            receiverUser = users.find(u => u.id.toString() === receiverId);
 
-                data.messages.forEach(m => {
+            if (receiverUser) {
+                document.getElementById('receiverName').innerText = receiverUser.fullName;
+                document.getElementById('receiverPhoto').src = receiverUser.photoData || 'https://via.placeholder.com/150';
+            }
+        } catch (err) {
+            console.error("Imeshindikana kupata taarifa za mpokeaji.");
+        }
+    }
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(`/api/chat/${currentUser.id}/${receiverId}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById('freeCount').innerText = data.freeMessagesLeft;
+                
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = "";
+
+                if (data.messages.length === 0) {
+                    container.innerHTML = `<p style="text-align: center; color: #888; font-size: 12px; margin-top: 20px;">Anza mazungumzo na ${receiverUser ? receiverUser.fullName : 'huyu mtu'} leo!</p>`;
+                    return;
+                }
+
+                data.messages.forEach(msg => {
                     const div = document.createElement('div');
-                    div.className = `message ${m.senderId == currentUser.id ? 'sent' : 'received'}`;
-                    
-                    let content = '';
-                    if (m.text) content += `<div>${m.text}</div>`;
-                    if (m.photoData) content += `<img src="${m.photoData}" alt="Picha">`;
-                    div.innerHTML = content;
+                    div.className = `message ${msg.senderId === currentUser.id.toString() ? 'sent' : 'received'}`;
+                    div.innerText = msg.text;
                     container.appendChild(div);
                 });
 
                 container.scrollTop = container.scrollHeight;
-                document.getElementById('msgCount').innerText = `Zilizobaki: ${data.freeMessagesLeft}`;
-
-                // Hifadhi freeMessagesLeft mpya kwenye localStorage
-                currentUser.freeMessagesLeft = data.freeMessagesLeft;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-                if (!data.isAllowed) {
-                    document.getElementById('inputArea').style.display = 'none';
-                    document.getElementById('lockedArea').style.display = 'block';
-                } else {
-                    document.getElementById('inputArea').style.display = 'flex';
-                    document.getElementById('lockedArea').style.display = 'none';
-                }
-            } catch (err) {
-                console.error("Hitilafu ya kupakia ujumbe:", err);
             }
+        } catch (err) {
+            console.error("Hitilafu wakati wa kupakia ujumbe.");
         }
+    }
 
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    selectedImageBase64 = e.target.result;
-                    document.getElementById('fileName').innerText = `Picha: ${input.files[0].name}`;
-                    document.getElementById('imagePreviewContainer').style.display = 'flex';
-                }
-                reader.readAsDataURL(input.files[0]);
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        try {
+            const res = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderId: currentUser.id,
+                    receiverId: receiverId,
+                    text: text
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.status === 403 && data.locked) {
+                document.getElementById('paywallModal').style.display = 'flex';
+                return;
             }
-        }
 
-        function clearImage() {
-            selectedImageBase64 = null;
-            document.getElementById('imageInput').value = '';
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text && !selectedImageBase64) return;
-
-            try {
-                const res = await fetch('/api/chat/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        senderId: currentUser.id,
-                        receiverId: receiverId,
-                        text: text,
-                        photoData: selectedImageBase64
-                    })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    input.value = '';
-                    clearImage();
-                    currentUser.freeMessagesLeft = data.freeMessagesLeft;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    loadMessages();
-                } else {
-                    alert(data.error);
-                    if (data.locked) {
-                        document.getElementById('inputArea').style.display = 'none';
-                        document.getElementById('lockedArea').style.display = 'block';
-                    }
-                }
-            } catch (err) {
-                alert("Imeshindikana kutuma ujumbe.");
+            if (res.ok) {
+                input.value = "";
+                loadMessages();
+            } else {
+                alert(data.error || "Imeshindikana kutuma ujumbe.");
             }
+        } catch (err) {
+            alert("Hitilafu ya mtandao.");
         }
+    }
 
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
+    async function simulatePayment() {
+        try {
+            const res = await fetch(`/api/subscribe/${currentUser.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
 
-        async function paySubscription() {
-            if (!confirm("Je, ungependa kulipa TZS 2,000 ili uwe na siku 5 za kuchati bila kikomo?")) return;
-
-            try {
-                const res = await fetch(`/api/subscribe/${currentUser.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    currentUser.subscriptionExpiresAt = data.expiresAt;
-                    currentUser.freeMessagesLeft = 0;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert(data.message);
-                    loadMessages();
-                } else {
-                    alert(data.error);
-                }
-            } catch (err) {
-                alert("Hitilafu ya malipo imetokea.");
+            if (res.ok) {
+                alert(data.message);
+                document.getElementById('paywallModal').style.display = 'none';
+                loadMessages();
+            } else {
+                alert(data.error);
             }
+        } catch (err) {
+            alert("Hitilafu wakati wa kulipia.");
         }
+    }
+</script>
 
-        setInterval(loadMessages, 3000); // Kufanya refresh ya ujumbe kila baada ya sekunde 3
-        loadMessages();
-    </script>
 </body>
 </html>
