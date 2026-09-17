@@ -9,23 +9,26 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB ukiwa na opts za kuzuia kuchelewa (Connection Pooling & Optimization)
+// Muunganisho wa MongoDB[cite: 9]
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000, // Epuka kusubiri sana kama database haipatikani mara moja
+    serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
 })
 .then(() => console.log("MongoDB Connected Successfully"))
 .catch(err => console.error("MongoDB Connection Error:", err));
 
-// Database Schemas (Miundo ya Data)
+// Database Schemas[cite: 9]
 const userSchema = new mongoose.Schema({
     id: Number,
     fullName: String,
     whatsappNumber: { type: String, unique: true, index: true },
     photoData: String,
     seeking: String,
+    bio: { type: String, default: "Mtu mzuri ninayependa mazungumzo ya maana." },
+    region: { type: String, default: "Dar es Salaam" },
+    age: { type: Number, default: 25 },
     freeMessagesLeft: { type: Number, default: 5 },
     subscriptionExpiresAt: { type: Date, default: null }
 });
@@ -43,7 +46,7 @@ const messageSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Message = mongoose.model('Message', messageSchema);
 
-// Kazi ndogo ya kusafisha namba
+// Kazi ndogo ya kusafisha namba[cite: 9]
 function sanitizePhoneNumber(phone) {
     if (!phone) return "";
     let cleaned = phone.trim();
@@ -53,10 +56,10 @@ function sanitizePhoneNumber(phone) {
     return cleaned;
 }
 
-// 1. KUJISAJILI
+// 1. KUJISAJILI[cite: 9]
 app.post('/api/signup', async (req, res) => {
     try {
-        let { fullName, whatsappNumber, photoData, seeking } = req.body;
+        let { fullName, whatsappNumber, photoData, seeking, region, age } = req.body;
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
 
         const existingUser = await User.findOne({ whatsappNumber });
@@ -73,8 +76,10 @@ app.post('/api/signup', async (req, res) => {
             id: count + 1,
             fullName,
             whatsappNumber,
-            photoData: photoData,
-            seeking: seeking || "Urafiki Tu",
+            photoData,
+            seeking: seeking || "Mchumba wa Ndoa",
+            region: region || "Dar es Salaam",
+            age: age || 25,
             freeMessagesLeft: 5,
             subscriptionExpiresAt: null
         });
@@ -87,7 +92,23 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI
+// 2. KUINGIA (LOGIN)
+app.post('/api/login', async (req, res) => {
+    try {
+        let { whatsappNumber } = req.body;
+        whatsappNumber = sanitizePhoneNumber(whatsappNumber);
+        
+        const user = await User.findOne({ whatsappNumber });
+        if (!user) {
+            return res.status(404).json({ error: "Namba hii haijapatikana. Tafadhali jisajili kwanza." });
+        }
+        res.json({ success: true, user });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu wakati wa kuingia." });
+    }
+});
+
+// 3. KUPATA ORODHA YA WATUMIAJI[cite: 9]
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await User.find({}).lean();
@@ -97,12 +118,41 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// 3. KUPATA MAZUNGUMZO KATI YA WATUMIAJI WAWILI NA KUSOMA MESEJI
+// 4. ADMIN TAKWIMU NA DASHBODI (Hatua ya 10)
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const now = new Date();
+        const activeUsers = await User.countDocuments({
+            $or: [
+                { subscriptionExpiresAt: { $gt: now } },
+                { freeMessagesLeft: { $gt: 0 } }
+            ]
+        });
+        const paidUsers = await User.countDocuments({ subscriptionExpiresAt: { $gt: now } });
+        const revenue = paidUsers * 2000;
+
+        // Kupata usajili wa hivi karibuni
+        const recentUsers = await User.find({}).sort({ _id: -1 }).limit(5).lean();
+
+        res.json({
+            totalUsers,
+            activeUsers,
+            paidUsers,
+            activePasses: paidUsers,
+            revenue,
+            recentUsers
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Imeshindikana kupata takwimu za admin." });
+    }
+});
+
+// 5. KUPATA MAZUNGUMZO KATI YA WATUMIAJI WAWILI[cite: 9]
 app.get('/api/chat/:userId/:receiverId', async (req, res) => {
     try {
         const { userId, receiverId } = req.params;
         
-        // Weka alama kuwa meseji zimesomwa
         await Message.updateMany(
             { senderId: receiverId, receiverId: userId, read: false },
             { $set: { read: true } }
@@ -121,23 +171,23 @@ app.get('/api/chat/:userId/:receiverId', async (req, res) => {
         let isAllowed = true;
         const now = new Date();
         if (user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > now) {
-            isAllowed = true; // Ana usajili hai
+            isAllowed = true; 
         } else if (user.freeMessagesLeft <= 0) {
-            isAllowed = false; // Ujumbe wa bure umeisha
+            isAllowed = false; 
         }
 
         res.json({
             messages,
             freeMessagesLeft: user.freeMessagesLeft,
+            subscriptionExpiresAt: user.subscriptionExpiresAt,
             isAllowed
         });
     } catch (err) {
-        console.error("Hitilafu ya kupata chat:", err);
         res.status(500).json({ error: "Imeshindikana kupata mazungumzo." });
     }
 });
 
-// 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA (UNREAD COUNT)
+// 6. KUPATA IDADI YA MESEJI ZISIZOSOMWA[cite: 9]
 app.get('/api/messages/unread', async (req, res) => {
     try {
         let { user } = req.query;
@@ -165,12 +215,11 @@ app.get('/api/messages/unread', async (req, res) => {
 
         res.json(Object.values(unreadMap));
     } catch (err) {
-        console.error("Hitilafu unread:", err);
         res.status(500).json({ error: "Hitilafu." });
     }
 });
 
-// 4. KUTUMA UJUMBE AU PICHA
+// 7. KUTUMA UJUMBE AU PICHA[cite: 9]
 app.post('/api/chat/send', async (req, res) => {
     try {
         const { senderId, receiverId, text, photoData } = req.body;
@@ -196,7 +245,6 @@ app.post('/api/chat/send', async (req, res) => {
 
         await newMessage.save();
 
-        // Punguza ujumbe wa bure kama hana usajili hai
         if (!hasActiveSub) {
             senderUser.freeMessagesLeft -= 1;
             await senderUser.save();
@@ -208,12 +256,11 @@ app.post('/api/chat/send', async (req, res) => {
             freeMessagesLeft: senderUser.freeMessagesLeft
         });
     } catch (err) {
-        console.error("Hitilafu wakati wa kutuma ujumbe:", err);
         res.status(500).json({ error: "Hitilafu wakati wa kutuma ujumbe." });
     }
 });
 
-// 5. KULIPIA USAJILI (TZS 2,000 kwa siku 5)
+// 8. KULIPIA USAJILI (TZS 2,000 kwa siku 5)[cite: 9]
 app.post('/api/subscribe/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -221,7 +268,7 @@ app.post('/api/subscribe/:userId', async (req, res) => {
         if (!user) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
         const now = new Date();
-        let expiresAt = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); // Ongeza siku 5
+        let expiresAt = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); 
 
         user.subscriptionExpiresAt = expiresAt;
         user.freeMessagesLeft = 0;
@@ -233,12 +280,11 @@ app.post('/api/subscribe/:userId', async (req, res) => {
             expiresAt: expiresAt
         });
     } catch (err) {
-        console.error("Hitilafu ya malipo:", err);
         res.status(500).json({ error: "Hitilafu ya malipo imetokea." });
     }
 });
 
-// ADMIN ROUTE
+// ADMIN ROUTE[cite: 9]
 app.get('/admin', (req, res) => {
     const adminPath = path.join(__dirname, 'admin.html');
     if (fs.existsSync(adminPath)) {
