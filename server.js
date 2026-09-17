@@ -9,17 +9,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB[cite: 9]
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
 })
-.then(() => console.log("MongoDB Connected Successfully"))
+.then(() => console.log("MongoDB Connected Successfully for Tanzania Soul Mate"))
 .catch(err => console.error("MongoDB Connection Error:", err));
 
-// Database Schemas[cite: 9]
 const userSchema = new mongoose.Schema({
     id: Number,
     fullName: String,
@@ -46,7 +44,6 @@ const messageSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Message = mongoose.model('Message', messageSchema);
 
-// Kazi ndogo ya kusafisha namba[cite: 9]
 function sanitizePhoneNumber(phone) {
     if (!phone) return "";
     let cleaned = phone.trim();
@@ -56,7 +53,6 @@ function sanitizePhoneNumber(phone) {
     return cleaned;
 }
 
-// 1. KUJISAJILI[cite: 9]
 app.post('/api/signup', async (req, res) => {
     try {
         let { fullName, whatsappNumber, photoData, seeking, region, age } = req.body;
@@ -85,14 +81,12 @@ app.post('/api/signup', async (req, res) => {
         });
 
         await newUser.save();
-        res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
+        res.status(201).json({ message: "Umefanikiwa kujisajili Tanzania Soul Mate!", user: newUser });
     } catch (err) {
-        console.error("Hitilafu wakati wa kusajili:", err);
         res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
     }
 });
 
-// 2. KUINGIA (LOGIN)
 app.post('/api/login', async (req, res) => {
     try {
         let { whatsappNumber } = req.body;
@@ -108,7 +102,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 3. KUPATA ORODHA YA WATUMIAJI[cite: 9]
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await User.find({}).lean();
@@ -118,7 +111,6 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// 4. ADMIN TAKWIMU NA DASHBODI (Hatua ya 10)
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
@@ -131,28 +123,17 @@ app.get('/api/admin/stats', async (req, res) => {
         });
         const paidUsers = await User.countDocuments({ subscriptionExpiresAt: { $gt: now } });
         const revenue = paidUsers * 2000;
-
-        // Kupata usajili wa hivi karibuni
         const recentUsers = await User.find({}).sort({ _id: -1 }).limit(5).lean();
 
-        res.json({
-            totalUsers,
-            activeUsers,
-            paidUsers,
-            activePasses: paidUsers,
-            revenue,
-            recentUsers
-        });
+        res.json({ totalUsers, activeUsers, paidUsers, activePasses: paidUsers, revenue, recentUsers });
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kupata takwimu za admin." });
     }
 });
 
-// 5. KUPATA MAZUNGUMZO KATI YA WATUMIAJI WAWILI[cite: 9]
 app.get('/api/chat/:userId/:receiverId', async (req, res) => {
     try {
         const { userId, receiverId } = req.params;
-        
         await Message.updateMany(
             { senderId: receiverId, receiverId: userId, read: false },
             { $set: { read: true } }
@@ -187,7 +168,6 @@ app.get('/api/chat/:userId/:receiverId', async (req, res) => {
     }
 });
 
-// 6. KUPATA IDADI YA MESEJI ZISIZOSOMWA[cite: 9]
 app.get('/api/messages/unread', async (req, res) => {
     try {
         let { user } = req.query;
@@ -219,11 +199,9 @@ app.get('/api/messages/unread', async (req, res) => {
     }
 });
 
-// 7. KUTUMA UJUMBE AU PICHA[cite: 9]
 app.post('/api/chat/send', async (req, res) => {
     try {
         const { senderId, receiverId, text, photoData } = req.body;
-        
         const senderUser = await User.findOne({ id: Number(senderId) });
         if (!senderUser) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
@@ -250,17 +228,12 @@ app.post('/api/chat/send', async (req, res) => {
             await senderUser.save();
         }
 
-        res.json({
-            success: true,
-            message: newMessage,
-            freeMessagesLeft: senderUser.freeMessagesLeft
-        });
+        res.json({ success: true, message: newMessage, freeMessagesLeft: senderUser.freeMessagesLeft });
     } catch (err) {
         res.status(500).json({ error: "Hitilafu wakati wa kutuma ujumbe." });
     }
 });
 
-// 8. KULIPIA USAJILI (TZS 2,000 kwa siku 5)[cite: 9]
 app.post('/api/subscribe/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -276,7 +249,7 @@ app.post('/api/subscribe/:userId', async (req, res) => {
 
         res.json({
             success: true,
-            message: "Malipo yamefanikiwa! Una siku 5 za kuchati bila kikomo.",
+            message: "Malipo yamethibitishwa! Una siku 5 za kuchati bila kikomo kupitia Tanzania Soul Mate.",
             expiresAt: expiresAt
         });
     } catch (err) {
@@ -284,16 +257,15 @@ app.post('/api/subscribe/:userId', async (req, res) => {
     }
 });
 
-// ADMIN ROUTE[cite: 9]
 app.get('/admin', (req, res) => {
     const adminPath = path.join(__dirname, 'admin.html');
     if (fs.existsSync(adminPath)) {
         res.sendFile(adminPath);
     } else {
-        res.status(404).send("Ukurasa wa Admin haupatikani kwenye folda kuu.");
+        res.status(404).send("Ukurasa wa Admin haupatikani.");
     }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Tanzania Soul Mate Server running on port ${PORT}`);
 });
