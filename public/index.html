@@ -8,8 +8,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .container { width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; position: relative; }
         @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
 
         .page-section { display: none; flex: 1; flex-direction: column; padding: 30px; animation: fadeIn 0.4s ease-in-out; }
@@ -28,7 +39,7 @@
 
         .form-group { margin-bottom: 20px; text-align: left; }
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 8px; }
-        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; background: #fff; }
         
         .back-link { display: inline-flex; align-items: center; gap: 8px; color: #666; font-size: 14px; text-decoration: none; margin-bottom: 20px; font-weight: 500; cursor: pointer; }
 
@@ -290,3 +301,4 @@
 </script>
 
 </body>
+</html>
