@@ -102,9 +102,27 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Imesasishwa ili kupokea vigezo vya kuchuja (region, minAge, maxAge, seeking)
 app.get('/api/admin/users', async (req, res) => {
     try {
-        const users = await User.find({}).lean();
+        const { region, minAge, maxAge, seeking } = req.query;
+        let query = {};
+
+        if (region && region !== 'All' && region !== '') {
+            query.region = { $regex: new RegExp(region, 'i') };
+        }
+
+        if (minAge || maxAge) {
+            query.age = {};
+            if (minAge) query.age.$gte = Number(minAge);
+            if (maxAge) query.age.$lte = Number(maxAge);
+        }
+
+        if (seeking && seeking !== 'All' && seeking !== '') {
+            query.seeking = seeking;
+        }
+
+        const users = await User.find(query).lean();
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kupata watumiaji." });
