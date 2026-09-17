@@ -22,15 +22,14 @@ const userSchema = new mongoose.Schema({
     id: Number,
     fullName: String,
     whatsappNumber: { type: String, unique: true, index: true },
-    photoData: String, // Picha kuu (Profile Picture)
-    extraPhotos: { type: [String], default: [] }, // Picha za ziada (hadi 4)
+    photoData: String, 
+    extraPhotos: { type: [String], default: [] }, 
     seeking: String,
     bio: { type: String, default: "Mtu mzuri ninayependa mazungumzo ya maana." },
     region: { type: String, default: "Dar es Salaam" },
     age: { type: Number, default: 25 },
     freeMessagesLeft: { type: Number, default: 5 },
     subscriptionExpiresAt: { type: Date, default: null },
-    // Vipengele vya OTP na Uhakiki
     otpCode: String,
     otpExpires: Date,
     isVerified: { type: Boolean, default: false }
@@ -58,7 +57,7 @@ function sanitizePhoneNumber(phone) {
     return cleaned;
 }
 
-// 1. API ya Kutuma OTP (Wakati wa Kusajili au Kuingia)
+// 1. API ya Kutuma OTP
 app.post('/api/auth/send-otp', async (req, res) => {
     try {
         let { whatsappNumber } = req.body;
@@ -69,7 +68,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
         }
 
         const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // Dakika 10
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
         let user = await User.findOne({ whatsappNumber });
         if (!user) {
@@ -88,13 +87,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
         }
 
         await user.save();
-        console.log(`[OTP] Namba ya usalama ya ${whatsappNumber} ni: ${otpCode}`);
-
-        res.json({ 
-            success: true, 
-            message: "OTP imetumwa mafanikio!", 
-            debugOtp: otpCode 
-        });
+        res.json({ success: true, message: "OTP imetumwa mafanikio!", debugOtp: otpCode });
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kutuma OTP." });
     }
@@ -107,9 +100,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
 
         const user = await User.findOne({ whatsappNumber });
-        if (!user) {
-            return res.status(404).json({ error: "Mtumiaji hajapatikana." });
-        }
+        if (!user) return res.status(404).json({ error: "Mtumiaji hajapatikana." });
 
         if (!user.otpCode || user.otpCode !== otpCode) {
             return res.status(400).json({ error: "Namba ya OTP si sahihi!" });
@@ -130,16 +121,14 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     }
 });
 
-// 3. API ya Kukamilisha Usajili Baada ya OTP
+// 3. API ya Kukamilisha Usajili
 app.post('/api/signup', async (req, res) => {
     try {
         let { fullName, whatsappNumber, photoData, seeking, region, age } = req.body;
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
 
         let user = await User.findOne({ whatsappNumber });
-        if (!user) {
-            return res.status(404).json({ error: "Tafadhali thibitisha namba yako kwanza." });
-        }
+        if (!user) return res.status(404).json({ error: "Tafadhali thibitisha namba yako kwanza." });
 
         if (!photoData || photoData.trim() === "") {
             photoData = "https://via.placeholder.com/150";
@@ -165,9 +154,7 @@ app.post('/api/login', async (req, res) => {
         whatsappNumber = sanitizePhoneNumber(whatsappNumber);
         
         const user = await User.findOne({ whatsappNumber });
-        if (!user) {
-            return res.status(404).json({ error: "Namba hii haijapatikana. Tafadhali jisajili kwanza." });
-        }
+        if (!user) return res.status(404).json({ error: "Namba hii haijapatikana." });
         res.json({ success: true, user });
     } catch (err) {
         res.status(500).json({ error: "Hitilafu wakati wa kuingia." });
@@ -274,6 +261,29 @@ app.get('/api/chat/:userId/:receiverId', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: "Imeshindikana kupata mazungumzo." });
+    }
+});
+
+// --- API MPYA ILIYONGEZWA KUSAIDIA KITONE CHEKUNDU CHA UNREAD ---
+app.get('/api/messages/unread-count', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        if (!userId) {
+            return res.status(400).json({ error: "User ID inahitajika" });
+        }
+
+        const unreadCount = await Message.countDocuments({ 
+            receiverId: userId.toString(), 
+            read: false 
+        });
+        
+        res.json({ 
+            hasUnread: unreadCount > 0, 
+            count: unreadCount 
+        });
+    } catch (err) {
+        console.error("Hitilafu kwenye unread-count:", err);
+        res.status(500).json({ error: "Hitilafu ya seva" });
     }
 });
 
