@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BongoHearts - Discover & Chat</title>
+    <title>Tanzania Soul Mate - Discover & Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,23 +12,19 @@
         .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; overflow: hidden; }
         @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; } }
 
-        /* Header ya Juu */
         .app-header { padding: 15px 20px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
-        .app-header h2 { font-size: 20px; color: #ff3366; font-weight: 700; }
+        .app-header h2 { font-size: 18px; color: #ff3366; font-weight: 700; }
         .user-mini-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .user-mini-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid #ff3366; }
 
-        /* Sehemu za Ndani (Tabs) */
         .tab-content { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding-bottom: 70px; }
         .tab-content.active { display: flex; }
 
-        /* Nav ya Chini */
         .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #f0f0f0; z-index: 100; }
         .nav-item { text-align: center; color: #888; font-size: 11px; cursor: pointer; text-decoration: none; transition: 0.3s; }
         .nav-item i { font-size: 20px; display: block; margin-bottom: 3px; }
         .nav-item.active { color: #ff3366; }
 
-        /* Kadi za Wachumba */
         .discovery-feed { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         .profile-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; }
         .profile-img-container { width: 100%; height: 320px; position: relative; background: #eee; }
@@ -40,7 +36,6 @@
         
         .btn-chat { width: 100%; padding: 12px; background: #ff3366; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* Sehemu ya Meseji / Inbox */
         .inbox-list { padding: 15px; }
         .inbox-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #f9f9f9; cursor: pointer; text-decoration: none; color: inherit; }
         .inbox-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
@@ -48,7 +43,6 @@
         .inbox-name { font-weight: 600; font-size: 14px; color: #111; }
         .inbox-preview { font-size: 12px; color: #777; margin-top: 3px; }
 
-        /* Eneo la Mazungumzo (Chat Room Modal) */
         #chatModal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 200; display: none; flex-direction: column; }
         .chat-header { padding: 15px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; }
         .chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #fafafa; display: flex; flex-direction: column; gap: 10px; }
@@ -58,41 +52,33 @@
         .chat-input-area { padding: 12px 15px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
         .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 13px; }
         
-        /* Malipo na Ujumbe wa Kuisha kwa Muda (Hatua za 8 & 9) */
         .paywall-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; padding: 25px; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); display: none; z-index: 300; text-align: center; }
         .paywall-overlay h3 { color: #ff3366; margin-bottom: 10px; font-size: 20px; }
         .paywall-overlay p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <!-- HEADER -->
     <div class="app-header">
-        <h2>BongoHearts</h2>
+        <h2>Tanzania Soul Mate</h2>
         <div class="user-mini-profile" onclick="switchTab('profileTab')">
             <img id="headerUserPhoto" src="" alt="User">
             <span id="headerUserName" style="font-size: 13px; font-weight: 600;">Akaunti</span>
         </div>
     </div>
 
-    <!-- TAB 1: DISCOVER (Wachumba) -->
     <div id="discoverTab" class="tab-content active">
-        <div class="discovery-feed" id="discoveryFeedContainer">
-            <!-- Hapa kadi zitajaa kupitia Javascript -->
-        </div>
+        <div class="discovery-feed" id="discoveryFeedContainer"></div>
     </div>
 
-    <!-- TAB 2: INBOX (Ujumbe) -->
     <div id="inboxTab" class="tab-content">
         <div style="padding: 15px 15px 5px; font-weight: 700; font-size: 16px;">Ujumbe Wako</div>
-        <div class="inbox-list" id="inboxListContainer">
-            <!-- Orodha ya waliochati itakaa hapa -->
-        </div>
+        <div class="inbox-list" id="inboxListContainer"></div>
     </div>
 
-    <!-- TAB 3: PROFILE (Akaunti Yako & Hali ya Siku 5) -->
     <div id="profileTab" class="tab-content" style="padding: 20px;">
         <div style="text-align: center; margin-bottom: 20px;">
             <img id="profilePagePhoto" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #ff3366; margin-bottom: 10px;">
@@ -109,7 +95,6 @@
         <button class="btn" style="background: #333; color: white;" onclick="logout()">Toka Kwenye Mfumo (Logout)</button>
     </div>
 
-    <!-- CHAT ROOM MODAL -->
     <div id="chatModal">
         <div class="chat-header">
             <i class="fa-solid fa-arrow-left" style="cursor: pointer; font-size: 18px;" onclick="closeChat()"></i>
@@ -120,25 +105,21 @@
             </div>
         </div>
         
-        <div class="chat-messages" id="chatMessagesContainer">
-            <!-- Meseji zitajaa hapa -->
-        </div>
+        <div class="chat-messages" id="chatMessagesContainer"></div>
 
         <div class="chat-input-area" id="chatInputArea">
             <input type="text" id="chatInputText" placeholder="Andika ujumbe wako..." onkeypress="handleChatKeypress(event)">
             <button onclick="sendChatMessage()" style="background: #ff3366; border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
 
-        <!-- PAYWALL OVERLAY (Ikishika kikomo cha ujumbe wa bure au kuisha kwa siku 5) -->
         <div class="paywall-overlay" id="paywallOverlay">
             <h3>Ujumbe Wako Umeisha!</h3>
-            <p>Umeishiwa ujumbe za bure au siku 5 zimekwisha. Lipa TZS 2,000 sasa kupitia M-Pesa/TigoPesa uendelee kuchati bila kikomo kwa siku 5.</p>
-            <button class="btn" style="background: #25d366; color: white;" onclick="triggerPayment()"><i class="fa-brands fa-whatsapp"></i> Lipa TZS 2,000 Kupitia WhatsApp</button>
+            <p>Lipa TZS 2,000 kupitia Tanzania Soul Mate ili uendelee kuchati bila kikomo kwa siku 5 kamili.</p>
+            <button class="btn" style="background: #25d366; color: white;" onclick="triggerPayment()"><i class="fa-brands fa-whatsapp"></i> Lipa TZS 2,000 Sasa</button>
             <p style="font-size: 11px; color: #999; margin-top: 15px; cursor: pointer;" onclick="closePaywall()">Rudi Nyuma</p>
         </div>
     </div>
 
-    <!-- NAVIGATION BAR -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('discoverTab', this)">
             <i class="fa-solid fa-fire"></i> Gundua
@@ -154,14 +135,13 @@
 </div>
 
 <script>
-    let currentUser = JSON.parse(localStorage.getItem('bongoUser'));
+    let currentUser = JSON.parse(localStorage.getItem('soulmateUser'));
     if (!currentUser) {
         window.location.href = 'index.html';
     }
 
     let currentChatReceiverId = null;
 
-    // Kuweka taarifa za mtumiaji kwenye Header na Profile
     document.getElementById('headerUserPhoto').src = currentUser.photoData || 'https://via.placeholder.com/150';
     document.getElementById('headerUserName').innerText = currentUser.fullName.split(' ')[0];
     document.getElementById('profilePagePhoto').src = currentUser.photoData || 'https://via.placeholder.com/150';
@@ -174,7 +154,6 @@
     function switchTab(tabId, el) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        
         if (el) {
             document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
@@ -250,10 +229,9 @@
             });
             container.scrollTop = container.scrollHeight;
 
-            // Kuangalia kama ujumbe umezuiwa
             if (!data.isAllowed) {
                 document.getElementById('paywallOverlay').style.display = 'block';
-                document.getElementById('chatSubStatus').innerText = "Ujumbe uimeisha (Lipa TZS 2,000)";
+                document.getElementById('chatSubStatus').innerText = "Ujumbe umeisha (Lipa TZS 2,000)";
             } else {
                 if (data.subscriptionExpiresAt) {
                     document.getElementById('chatSubStatus').innerText = "Akaunti ina siku za kuchati";
@@ -283,23 +261,15 @@
             });
             const data = await res.json();
 
-            if (responseOkOrLocked(res, data)) {
+            if (res.ok) {
                 textInput.value = '';
                 await fetchChatMessages();
+            } else if (data.locked) {
+                document.getElementById('paywallOverlay').style.display = 'block';
             }
         } catch (err) {
             console.error("Hitilafu kutuma ujumbe");
         }
-    }
-
-    function responseOkOrLocked(res, data) {
-        if (res.ok) {
-            return true;
-        } else if (data.locked) {
-            document.getElementById('paywallOverlay').style.display = 'block';
-            return false;
-        }
-        return false;
     }
 
     function handleChatKeypress(e) {
@@ -344,7 +314,7 @@
                 alert(data.message);
                 currentUser.subscriptionExpiresAt = data.expiresAt;
                 currentUser.freeMessagesLeft = 0;
-                localStorage.setItem('bongoUser', JSON.stringify(currentUser));
+                localStorage.setItem('soulmateUser', JSON.stringify(currentUser));
                 document.getElementById('paywallOverlay').style.display = 'none';
                 updateProfileSubStatus();
                 fetchChatMessages();
@@ -360,7 +330,7 @@
         if (currentUser.subscriptionExpiresAt && new Date(currentUser.subscriptionExpiresAt) > now) {
             textEl.innerText = "Una siku za kuchati bila kikomo hadi: " + new Date(currentUser.subscriptionExpiresAt).toLocaleDateString();
         } else {
-            textEl.innerText = "Upo kwenye mfumo wa ujumbe wa bure. Lipa TZS 2,000 kupata siku 5 kamili.";
+            textEl.innerText = "Upo kwenye ujumbe wa bure. Lipa TZS 2,000 kupata siku 5 kamili.";
         }
     }
 
@@ -369,7 +339,7 @@
     }
 
     function logout() {
-        localStorage.removeItem('bongoUser');
+        localStorage.removeItem('soulmateUser');
         window.location.href = 'index.html';
     }
 </script>
