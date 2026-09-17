@@ -3,575 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Find Your Heart in Tanzania</title>
+    <title>BongoHearts - Pata Mchumba au Rafiki wa Kweli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #d63384;
-            --primary-hover: #c02974;
-            --text-dark: #111827;
-            --text-muted: #4b5563;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
+        @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: var(--text-dark);
-            background-color: #ffffff;
-        }
+        /* Vitu vya Ukurasa wa Mwanzo (Landing/Auth) */
+        .page-section { display: none; flex: 1; flex-direction: column; padding: 30px; animation: fadeIn 0.4s ease-in-out; }
+        .page-section.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Navbar */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            background: #ffffff;
-            border-bottom: 1px solid #f3f4f6;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+        /* Landing Design */
+        .landing-hero { text-align: center; margin: auto 0; }
+        .landing-hero i { font-size: 70px; color: #ff3366; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .landing-hero h1 { font-size: 28px; color: #111; margin-bottom: 10px; font-weight: 700; }
+        .landing-hero p { color: #666; font-size: 14px; margin-bottom: 30px; line-height: 1.6; }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--text-dark);
-            text-decoration: none;
-        }
+        /* Vifungo na Form */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; text-align: center; display: block; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, #ff3366, #ff6b8b); color: white; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3); margin-bottom: 15px; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-outline { background: transparent; border: 2px solid #ff3366; color: #ff3366; }
+        .btn-outline:hover { background: #fff0f3; }
 
-        .logo span {
-            color: var(--primary);
-        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: #ff3366; box-shadow: 0 0 0 3px rgba(255,51,102,0.1); }
 
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #666; font-size: 14px; text-decoration: none; margin-bottom: 20px; font-weight: 500; cursor: pointer; }
+        .back-link:hover { color: #ff3366; }
 
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 15px;
-            transition: color 0.2s;
-        }
+        /* Picha ya Kupakia */
+        .photo-upload-box { border: 2px dashed #ddd; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; position: relative; overflow: hidden; background: #fafafa; }
+        .photo-upload-box input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: none; border: 2px solid #ff3366; }
 
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-login {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 600;
-            padding: 8px 16px;
-            font-size: 15px;
-        }
-
-        .btn-signup {
-            text-decoration: none;
-            background: var(--primary);
-            color: white;
-            font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
-
-        .btn-signup:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            height: calc(100vh - 81px);
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-            display: flex;
-            align-items: center;
-            padding: 0 80px;
-        }
-
-        .hero-content {
-            max-width: 650px;
-            color: white;
-        }
-
-        .hero-badge {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #ff85a1;
-            margin-bottom: 15px;
-        }
-
-        .hero h1 {
-            font-size: 56px;
-            line-height: 1.1;
-            margin: 0 0 20px 0;
-            font-weight: 800;
-        }
-
-        .hero h1 span {
-            color: #ff4d6d;
-        }
-
-        .hero p {
-            font-size: 18px;
-            line-height: 1.5;
-            color: #f3f4f6;
-            margin-bottom: 30px;
-        }
-
-        .hero-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--primary);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 16px;
-            transition: background 0.2s, transform 0.1s;
-            border: none;
-            cursor: pointer;
-        }
-
-        .hero-btn:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
-        /* Modal Overlay for Login / Signup */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .modal-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #9ca3af;
-            background: none;
-            border: none;
-        }
-
-        .modal-card h2 {
-            color: var(--primary);
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 24px;
-            font-size: 24px;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary);
-            margin-bottom: -2px;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-dark);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        /* Mtindo wa namba ya simu yenye +255 ya kudumu */
-        .phone-input-container {
-            display: flex;
-            align-items: center;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #fff;
-        }
-
-        .phone-input-container:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(214, 51, 132, 0.1);
-        }
-
-        .country-code {
-            background-color: #f8f9fa;
-            color: #333;
-            padding: 12px 10px;
-            font-size: 15px;
-            font-weight: bold;
-            border-right: 1px solid #d1d5db;
-            user-select: none;
-        }
-
-        .phone-input-container input {
-            border: none;
-            outline: none;
-            padding: 12px;
-            font-size: 15px;
-            width: 100%;
-        }
-
-        .modal-submit {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        .modal-submit:hover {
-            background: var(--primary-hover);
-        }
-
-        .form-section {
-            display: none;
-        }
-
-        .form-section.active {
-            display: block;
-        }
-
-        .msg {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            header { padding: 15px 20px; }
-            .nav-links { display: none; }
-            .hero { padding: 0 20px; }
-            .hero h1 { font-size: 38px; }
-        }
+        .alert-msg { padding: 10px 15px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; display: none; }
+        .alert-error { background: #ffebee; color: #c62828; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <header>
-        <a href="#" class="logo">❤️ Tanzania<span>SoulMate</span></a>
-        <ul class="nav-links">
-            <li><a href="#" onclick="openModal('login')">Discover</a></li>
-            <li><a href="#" onclick="openModal('login')">Messages</a></li>
-            <li><a href="#" onclick="openModal('login')">Pricing</a></li>
-        </ul>
-        <div class="auth-buttons">
-            <a href="#" class="btn-login" onclick="openModal('login')">Login</a>
-            <a href="#" class="btn-signup" onclick="openModal('signup')">Sign Up</a>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge">MADE EXCLUSIVELY FOR TANZANIA</div>
-            <h1>Find Your Heart in Tanzania ❤️</h1>
-            <p>Meet genuine people. Connect. Chat. Build something real.</p>
-            <button class="hero-btn" onclick="openModal('signup')">Jiunge na TanzaniaSoulMate &rarr;</button>
-        </div>
-    </section>
-
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal-overlay">
-        <div class="modal-card">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-            <h2>TanzaniaSoulMate ❤️</h2>
+<div class="container">
+    
+    <!-- 1. UKURASA WA KWANZA (LANDING) -->
+    <div id="landingPage" class="page-section active">
+        <div class="landing-hero">
+            <i class="fa-solid fa-heart-circle-bolt"></i>
+            <h1>BongoHearts</h1>
+            <p>Ungana na watu sahihi kwa ajili ya mahusiano ya dhati, urafiki, au ndoa nchini Tanzania.</p>
             
-            <div class="tabs">
-                <div id="loginTabBtn" class="tab active" onclick="switchTab('login')">Ingia (Login)</div>
-                <div id="signupTabBtn" class="tab" onclick="switchTab('signup')">Jisajili (Sign Up)</div>
-            </div>
-
-            <!-- LOGIN FORM -->
-            <div id="loginSection" class="form-section active">
-                <form id="loginForm" onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label>Namba ya WhatsApp / Simu (Tanzania)</label>
-                        <div class="phone-input-container">
-                            <span class="country-code">+255</span>
-                            <input type="text" id="loginPhone" placeholder="712345678 (Anza na 0 au 7)" maxlength="10" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="modal-submit">Ingia Kwenye Akaunti</button>
-                </form>
-            </div>
-
-            <!-- SIGNUP FORM -->
-            <div id="signupSection" class="form-section">
-                <form id="signupForm" onsubmit="handleSignup(event)">
-                    <div class="form-group">
-                        <label>Jina Lako Kamili</label>
-                        <input type="text" id="signupName" placeholder="Andika jina lako" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Namba ya WhatsApp / Simu (Tanzania)</label>
-                        <div class="phone-input-container">
-                            <span class="country-code">+255</span>
-                            <input type="text" id="signupPhone" placeholder="712345678 (Anza na 0 au 7)" maxlength="10" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Unatafuta Nini?</label>
-                        <select id="signupSeeking" required>
-                            <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
-                            <option value="Urafiki Tu">Urafiki Tu</option>
-                            <option value="Mahusiano ya Kawaida">Mahusiano ya Kawaida</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Chagua Picha Yako (Upload Photo)</label>
-                        <input type="file" id="signupPhotoFile" accept="image/*" required>
-                    </div>
-                    <button type="submit" class="modal-submit">Jisajili Sasa</button>
-                </form>
-            </div>
-
-            <div id="message" class="msg"></div>
+            <button class="btn btn-primary" onclick="showPage('signupPage')">Anza Sasa (Jisajili)</button>
+            <button class="btn btn-outline" onclick="showPage('loginPage')">Ninayo Akaunti (Ingia)</button>
         </div>
     </div>
 
-    <script>
-        function openModal(tabName) {
-            document.getElementById('authModal').style.display = 'flex';
-            switchTab(tabName);
-        }
+    <!-- 2. UKURASA WA KUJISAJILI (SIGNUP) -->
+    <div id="signupPage" class="page-section">
+        <a class="back-link" onclick="showPage('landingPage')"><i class="fa-solid fa-arrow-left"></i> Rudi Nyuma</a>
+        <h2>Fungua Akaunti</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Jaza taarifa zako ili uanze kuona wachumba.</p>
+        
+        <div id="signupAlert" class="alert-msg"></div>
 
-        function closeModal() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('message').innerText = '';
-        }
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label>Jina Lako Kamili</label>
+                <input type="text" id="signupName" class="form-control" placeholder="Mf. Juma Ally" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Namba ya WhatsApp</label>
+                <input type="text" id="signupPhone" class="form-control" placeholder="Mf. 0712345678" required>
+            </div>
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Umri</label>
+                    <input type="number" id="signupAge" class="form-control" value="24" min="18" max="70" required>
+                </div>
+                <div class="form-group">
+                    <label>Mkoa</label>
+                    <input type="text" id="signupRegion" class="form-control" value="Dar es Salaam" required>
+                </div>
+            </div>
 
-            if (tabName === 'login') {
-                document.getElementById('loginTabBtn').classList.add('active');
-                document.getElementById('loginSection').classList.add('active');
-            } else {
-                document.getElementById('signupTabBtn').classList.add('active');
-                document.getElementById('signupSection').classList.add('active');
-            }
-            document.getElementById('message').innerText = '';
-        }
+            <div class="form-group">
+                <label>Unatafuta Nini?</label>
+                <select id="signupSeeking" class="form-control">
+                    <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
+                    <option value="Urafiki wa Kawaida">Urafiki wa Kawaida</option>
+                    <option value="Mahusiano ya Kina">Mahusiano ya Kina</option>
+                </select>
+            </div>
 
-        // Kazi ya kusafisha na kuunganisha namba ya Tanzania kwa usahihi
-        function formatTzPhone(inputVal) {
-            let clean = inputVal.trim();
-            if (clean.startsWith('+255')) {
-                clean = clean.substring(4);
-            } else if (clean.startsWith('255')) {
-                clean = clean.substring(3);
-            }
-            if (clean.startsWith('0')) {
-                clean = clean.substring(1);
-            }
-            return '+255' + clean;
-        }
+            <div class="form-group">
+                <label>Weka Picha Yako Nzuri</label>
+                <div class="photo-upload-box">
+                    <img id="signupPhotoPreview" class="photo-preview" src="" alt="Preview">
+                    <div id="uploadPromptText"><i class="fa-solid fa-camera" style="font-size: 24px; color: #ff3366; margin-bottom: 5px;"></i><br>Bonyeza kupakia picha</div>
+                    <input type="file" id="signupPhotoFile" accept="image/*" onchange="previewImage(event)">
+                </div>
+            </div>
 
-        // Kazi ya kuchukua tarakimu 9 za mwisho za namba kwa ajili ya urahisi wa Login
-        function getLast9Digits(phone) {
-            let digits = phone.replace(/\D/g, '');
-            return digits.slice(-9);
-        }
+            <button type="submit" class="btn btn-primary">Malizia Usajili</button>
+        </form>
+    </div>
 
-        async function handleSignup(e) {
-            e.preventDefault();
-            const fullName = document.getElementById('signupName').value;
-            const rawPhone = document.getElementById('signupPhone').value;
-            const seeking = document.getElementById('signupSeeking').value;
-            const photoFile = document.getElementById('signupPhotoFile').files[0];
-            const msgDiv = document.getElementById('message');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+    <!-- 3. UKURASA WA KUINGIA (LOGIN) -->
+    <div id="loginPage" class="page-section">
+        <a class="back-link" onclick="showPage('landingPage')"><i class="fa-solid fa-arrow-left"></i> Rudi Nyuma</a>
+        <h2>Karibu Tena</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Ingiza namba yako ya WhatsApp kuendelea.</p>
 
-            if (!photoFile) {
-                msgDiv.style.color = 'red';
-                msgDiv.innerText = "Tafadhali chagua picha yako kwanza!";
-                return;
-            }
+        <div id="loginAlert" class="alert-msg"></div>
 
-            const whatsappNumber = formatTzPhone(rawPhone);
-            const tzPhoneRegex = /^\+255[67]\d{8}$/;
-            if (!tzPhoneRegex.test(whatsappNumber)) {
-                msgDiv.style.color = 'red';
-                msgDiv.innerText = "Namba ya simu si sahihi! Tafadhali ingiza namba halali ya Tanzania (mfano: 07xxxxxxxx).";
-                return;
-            }
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Namba ya WhatsApp</label>
+                <input type="text" id="loginPhone" class="form-control" placeholder="Mf. 0712345678" required>
+            </div>
 
-            submitBtn.disabled = true;
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = "Inajisajili...";
+            <button type="submit" class="btn btn-primary">Ingia Kwenye Mfumo</button>
+        </form>
+    </div>
 
-            msgDiv.style.color = 'blue';
-            msgDiv.innerText = "Inapakia picha yako, tafadhali subiri...";
+</div>
 
+<script>
+    let base64PhotoString = "";
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+    }
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
             const reader = new FileReader();
-            reader.readAsDataURL(photoFile);
-            reader.onload = async function () {
-                const photoData = reader.result;
-
-                try {
-                    const res = await fetch('/api/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fullName, whatsappNumber, photoData, seeking })
-                    });
-                    const data = await res.json();
-
-                    if (res.ok) {
-                        msgDiv.style.color = 'green';
-                        msgDiv.innerText = data.message;
-                        setTimeout(() => switchTab('login'), 2500);
-                    } else {
-                        msgDiv.style.color = 'red';
-                        msgDiv.innerText = data.error;
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = originalText;
-                    }
-                } catch (err) {
-                    msgDiv.style.color = 'red';
-                    msgDiv.innerText = "Hitilafu ya mtandao wakati wa kujisajili. Jaribu tena.";
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = originalText;
-                }
-            };
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const rawPhone = document.getElementById('loginPhone').value;
-            const msgDiv = document.getElementById('message');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-
-            const whatsappNumber = formatTzPhone(rawPhone);
-            const tzPhoneRegex = /^\+255[67]\d{8}$/;
-            if (!tzPhoneRegex.test(whatsappNumber)) {
-                msgDiv.style.color = 'red';
-                msgDiv.innerText = "Namba ya simu si sahihi! Tafadhali ingiza namba halali ya Tanzania (mfano: 07xxxxxxxx).";
-                return;
+            reader.onload = function(e) {
+                base64PhotoString = e.target.result;
+                const preview = document.getElementById('signupPhotoPreview');
+                preview.src = base64PhotoString;
+                preview.style.display = 'block';
+                document.getElementById('uploadPromptText').style.display = 'none';
             }
-
-            submitBtn.disabled = true;
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = "Inaingia...";
-            msgDiv.style.color = 'blue';
-            msgDiv.innerText = "Inahakiki taarifa zako, tafadhali subiri...";
-
-            try {
-                const res = await fetch('/api/admin/users');
-                const users = await res.json();
-                
-                const inputLast9 = getLast9Digits(whatsappNumber);
-                console.log("Tarakimu 9 za kuingia:", inputLast9);
-
-                // Inatafuta mtumiaji kwa kulinganisha tarakimu 9 za mwisho
-                const user = users.find(u => getLast9Digits(u.whatsappNumber) === inputLast9);
-
-                if (user) {
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    msgDiv.style.color = 'green';
-                    msgDiv.innerText = "Umeingia kwa mafanikio! Unapelekwa...";
-                    setTimeout(() => {
-                        window.location.href = 'discover.html';
-                    }, 1200);
-                } else {
-                    msgDiv.style.color = 'red';
-                    msgDiv.innerText = "Namba hii haijapatikana. Tafadhali jisajili kwanza.";
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = originalText;
-                }
-            } catch (err) {
-                msgDiv.style.color = 'red';
-                msgDiv.innerText = "Hitilafu imetokea wakati wa kuingia.";
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalText;
-            }
+            reader.readAsDataURL(file);
         }
+    }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('authModal');
-            if (event.target === modal) {
-                closeModal();
+    async function handleSignup(e) {
+        e.preventDefault();
+        const alertBox = document.getElementById('signupAlert');
+        
+        const payload = {
+            fullName: document.getElementById('signupName').value,
+            whatsappNumber: document.getElementById('signupPhone').value,
+            age: parseInt(document.getElementById('signupAge').value),
+            region: document.getElementById('signupRegion').value,
+            seeking: document.getElementById('signupSeeking').value,
+            photoData: base64PhotoString
+        };
+
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                localStorage.setItem('bongoUser', JSON.stringify(data.user));
+                window.location.href = 'discover.html'; // Kuhamia ukurasa wa kuchunguza wachumba
+            } else {
+                alertBox.className = "alert-msg alert-error";
+                alertBox.innerText = data.error || "Hitilafu imetokea.";
+                alertBox.style.display = "block";
             }
+        } catch (err) {
+            alertBox.className = "alert-msg alert-error";
+            alertBox.innerText = "Imeshindikana kuunganisha na seva.";
+            alertBox.style.display = "block";
         }
-    </script>
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const alertBox = document.getElementById('loginAlert');
+        const phone = document.getElementById('loginPhone').value;
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ whatsappNumber: phone })
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                localStorage.setItem('bongoUser', JSON.stringify(data.user));
+                window.location.href = 'discover.html';
+            } else {
+                alertBox.className = "alert-msg alert-error";
+                alertBox.innerText = data.error || "Namba haijapatikana.";
+                alertBox.style.display = "block";
+            }
+        } catch (err) {
+            alertBox.className = "alert-msg alert-error";
+            alertBox.innerText = "Hitilafu ya mtandao.";
+            alertBox.style.display = "block";
+        }
+    }
+</script>
+
 </body>
 </html>
