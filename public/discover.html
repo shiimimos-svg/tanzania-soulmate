@@ -15,29 +15,21 @@
         /* Header */
         .header { padding: 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
         .header h2 { font-size: 20px; color: #ff3366; font-weight: 700; }
-        .header-icons { display: flex; gap: 18px; align-items: center; }
+        .header-icons { display: flex; gap: 15px; align-items: center; }
         
-        .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 18px; display: inline-flex; align-items: center; }
-        .notification-icon-wrapper:hover { color: #ff3366; }
+        .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 18px; display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; padding: 6px 12px; border-radius: 20px; border: 1px solid #ffccd5; }
+        .notification-icon-wrapper:hover { background: #ffe3e8; }
         
-        /* Badji ya Kuonyesha Idadi ya Ujumbe (Namba) */
-        .unread-badge { 
-            position: absolute; 
-            top: -8px; 
-            right: -10px; 
-            background-color: #ff3366; 
-            color: white; 
-            font-size: 10px; 
+        /* Sehemu ya Maandishi ya Unread Messages */
+        .unread-text { 
+            font-size: 11px; 
             font-weight: 600; 
-            padding: 2px 5px; 
-            border-radius: 10px; 
-            border: 2px solid #fff; 
+            color: #ff3366; 
             display: none; 
-            min-width: 18px; 
-            text-align: center; 
+            white-space: nowrap;
         }
 
-        .logout-btn { cursor: pointer; color: #555; font-size: 18px; }
+        .logout-btn { cursor: pointer; color: #555; font-size: 18px; padding: 5px; }
         .logout-btn:hover { color: #ff3366; }
 
         /* Filters Bar */
@@ -76,8 +68,8 @@
         <h2>Tanzania Soul Mate</h2>
         <div class="header-icons">
             <div class="notification-icon-wrapper" onclick="window.location.href='chats.html'" title="Arifa na Ujumbe">
-                <i class="fa-solid fa-bell"></i>
-                <span id="unreadBadge" class="unread-badge"></span>
+                <i class="fa-solid fa-bell" style="color: #ff3366;"></i>
+                <span id="unreadText" class="unread-text">Unread Messages: 0</span>
             </div>
             <i class="fa-solid fa-right-from-bracket logout-btn" onclick="logout()" title="Ondoka"></i>
         </div>
@@ -179,7 +171,7 @@
         }
     }
 
-    // Function ya kuweka idadi halisi ya jumbe ambazo hazijasomwa kwenye badge
+    // Function ya kuandika maneno kamili yenye idadi ya ujumbe
     async function checkUnreadMessages() {
         try {
             if (!currentUser) return;
@@ -189,14 +181,13 @@
             const res = await fetch(`/api/messages/unread-count?userId=${identifier}`);
             if (res.ok) {
                 const data = await res.json();
-                const badge = document.getElementById('unreadBadge');
+                const unreadText = document.getElementById('unreadText');
                 
                 if (data.count > 0) {
-                    // Ikiwa idadi ni kubwa kuliko 99, inaweka "99+", vinginevyo inaweka namba husika (mfano: 20)
-                    badge.innerText = data.count > 99 ? '99+' : data.count;
-                    badge.style.display = 'inline-block';
+                    unreadText.innerText = `Unread Messages: ${data.count}`;
+                    unreadText.style.display = 'inline-block';
                 } else {
-                    badge.style.display = 'none';
+                    unreadText.style.display = 'none';
                 }
             }
         } catch (err) {
