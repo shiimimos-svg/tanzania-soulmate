@@ -15,7 +15,15 @@
         /* Header */
         .header { padding: 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
         .header h2 { font-size: 20px; color: #ff3366; font-weight: 700; }
-        .header-icons { display: flex; gap: 15px; font-size: 18px; color: #555; cursor: pointer; }
+        .header-icons { display: flex; gap: 18px; align-items: center; }
+        
+        /* Icon ya Kengele yenye Badge ya Ujumbe */
+        .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 18px; display: inline-flex; align-items: center; }
+        .notification-icon-wrapper:hover { color: #ff3366; }
+        .unread-badge { position: absolute; top: -5px; right: -6px; width: 10px; height: 10px; background-color: #ff3366; border-radius: 50%; border: 2px solid #fff; display: none; }
+
+        .logout-btn { cursor: pointer; color: #555; font-size: 18px; }
+        .logout-btn:hover { color: #ff3366; }
 
         /* Filters Bar */
         .filters-bar { padding: 15px 20px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; gap: 10px; overflow-x: auto; }
@@ -39,7 +47,7 @@
 
         /* Bottom Nav */
         .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; z-index: 10; }
-        .nav-item { text-align: center; color: #888; font-size: 11px; text-decoration: none; cursor: pointer; }
+        .nav-item { text-align: center; color: #888; font-size: 11px; text-decoration: none; cursor: pointer; position: relative; }
         .nav-item i { display: block; font-size: 18px; margin-bottom: 3px; }
         .nav-item.active { color: #ff3366; }
     </style>
@@ -52,8 +60,11 @@
     <div class="header">
         <h2>Tanzania Soul Mate</h2>
         <div class="header-icons">
-            <i class="fa-solid fa-bell" onclick="alert('Hakuna taarifa mpya kwa sasa.')"></i>
-            <i class="fa-solid fa-right-from-bracket" onclick="logout()" title="Ondoka"></i>
+            <div class="notification-icon-wrapper" onclick="window.location.href='chats.html'" title="Arifa na Ujumbe">
+                <i class="fa-solid fa-bell"></i>
+                <span id="unreadBadge" class="unread-badge"></span>
+            </div>
+            <i class="fa-solid fa-right-from-bracket logout-btn" onclick="logout()" title="Ondoka"></i>
         </div>
     </div>
 
@@ -106,6 +117,7 @@
         }
         currentUser = JSON.parse(userStr);
         loadUsers();
+        checkUnreadMessages(); // Inachunguza ujumbe mpya mara tu ukurasa unapofunguka
     };
 
     async function loadUsers() {
@@ -142,7 +154,7 @@
                             <span><i class="fa-solid fa-location-dot"></i> ${user.region || 'Tanzania'}</span>
                         </div>
                         <p>${user.bio || 'Mtu mzuri ninayependa mazungumzo ya maana.'}</p>
-                        <button class="btn-chat" onclick="startChat('${user.id}')">
+                        <button class="btn-chat" onclick="startChat('${user._id || user.id}')">
                             <i class="fa-solid fa-comment-dots"></i> Anza Kuchati
                         </button>
                     </div>
@@ -154,8 +166,30 @@
         }
     }
 
+    // Function ya kuangalia kama kuna ujumbe ambao haujasomwa kutoka kwenye Backend
+    async function checkUnreadMessages() {
+        try {
+            if (!currentUser || (!currentUser._id && !currentUser.id)) return;
+            const userId = currentUser._id || currentUser.id;
+
+            const res = await fetch(`/api/messages/unread-count?userId=${userId}`);
+            if (res.ok) {
+                const data = await res.json();
+                const badge = document.getElementById('unreadBadge');
+                
+                // Ikiwa kuna ujumbe mpya, kitone chekundu kitatokea juu ya kengele
+                if (data.hasUnread) {
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        } catch (err) {
+            console.log("Imeshindikana kuangalia ujumbe mpya:", err);
+        }
+    }
+
     function startChat(receiverId) {
-        // Hapa inampeleka kwenye ukurasa wa mazungumzo na huyo mtu
         window.location.href = `chat.html?receiverId=${receiverId}`;
     }
 
