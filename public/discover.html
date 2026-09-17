@@ -20,7 +20,9 @@
         .notification-icon-wrapper { position: relative; cursor: pointer; color: #555; font-size: 16px; display: inline-flex; align-items: center; gap: 6px; background: #fff0f3; padding: 5px 10px; border-radius: 20px; border: 1px solid #ffccd5; }
         .notification-icon-wrapper:hover { background: #ffe3e8; }
         
-        .unread-text { font-size: 10px; font-weight: 600; color: #ff3366; display: none; white-space: nowrap; }
+        /* Maandishi ya Unread Messages yanaonekana kila wakati */
+        .unread-text { font-size: 10px; font-weight: 600; color: #ff3366; white-space: nowrap; display: inline-block; }
+        
         .logout-btn { cursor: pointer; color: #555; font-size: 16px; padding: 5px; }
         .logout-btn:hover { color: #ff3366; }
 
@@ -28,7 +30,7 @@
         .filters-bar { padding: 10px 15px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; gap: 8px; overflow-x: auto; }
         .filter-select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 15px; font-size: 11px; background: #fff; outline: none; cursor: pointer; }
 
-        /* Feed Content - Grid ya Profaili Ndogo Ndogo */
+        /* Feed Content */
         .content { padding: 12px; flex: 1; overflow-y: auto; padding-bottom: 80px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         
         .profile-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
@@ -64,7 +66,7 @@
         <div class="header-icons">
             <div class="notification-icon-wrapper" onclick="window.location.href='chats.html'" title="Arifa na Ujumbe">
                 <i class="fa-solid fa-bell" style="color: #ff3366;"></i>
-                <span id="unreadText" class="unread-text">Unread: 0</span>
+                <span id="unreadText" class="unread-text">Unread Messages: 0</span>
             </div>
             <i class="fa-solid fa-right-from-bracket logout-btn" onclick="logout()" title="Ondoka"></i>
         </div>
@@ -88,7 +90,7 @@
         </select>
     </div>
 
-    <!-- Main Feed - Grid view ya picha ndogo -->
+    <!-- Main Feed -->
     <div class="content" id="profilesContainer">
         <p style="text-align: center; color: #888; grid-column: span 2; margin-top: 40px;">Inapakia wachumba...</p>
     </div>
@@ -177,12 +179,9 @@
                 const data = await res.json();
                 const unreadText = document.getElementById('unreadText');
                 
-                if (data.count > 0) {
-                    unreadText.innerText = `Unread: ${data.count}`;
-                    unreadText.style.display = 'inline-block';
-                } else {
-                    unreadText.style.display = 'none';
-                }
+                // Inaweka idadi halisi, na hata kama ikiwa 0 itaandika Unread Messages: 0
+                const count = data.count || 0;
+                unreadText.innerText = `Unread Messages: ${count}`;
             }
         } catch (err) {
             console.log("Imeshindikana kuangalia idadi ya ujumbe:", err);
