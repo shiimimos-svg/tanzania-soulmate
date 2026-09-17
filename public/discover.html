@@ -25,6 +25,12 @@
         .nav-item i { font-size: 20px; display: block; margin-bottom: 3px; }
         .nav-item.active { color: #ff3366; }
 
+        /* Filter Section Styling */
+        .filter-box { background: #fff5f7; padding: 12px 15px; border-bottom: 1px solid #ffccd5; display: flex; flex-direction: column; gap: 8px; }
+        .filter-row { display: flex; gap: 8px; }
+        .filter-control { flex: 1; padding: 8px 10px; border: 1px solid #ffb3c1; border-radius: 8px; font-size: 12px; outline: none; background: #fff; }
+        .btn-filter { background: #ff3366; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
         .discovery-feed { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         .profile-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; }
         .profile-img-container { width: 100%; height: 320px; position: relative; background: #eee; }
@@ -71,6 +77,24 @@
     </div>
 
     <div id="discoverTab" class="tab-content active">
+        <!-- SEHEMU YA KUCHUJA (FILTER BAR) -->
+        <div class="filter-box">
+            <div class="filter-row">
+                <input type="text" id="filterRegion" class="filter-control" placeholder="Mkoa (Mf. Dar es Salaam)">
+                <select id="filterSeeking" class="filter-control">
+                    <option value="All">Aina Zote</option>
+                    <option value="Mchumba wa Ndoa">Mchumba wa Ndoa</option>
+                    <option value="Urafiki wa Kawaida">Urafiki wa Kawaida</option>
+                    <option value="Mahusiano ya Kina">Mahusiano ya Kina</option>
+                </select>
+            </div>
+            <div class="filter-row">
+                <input type="number" id="filterMinAge" class="filter-control" placeholder="Umri wa Chini" min="18">
+                <input type="number" id="filterMaxAge" class="filter-control" placeholder="Umri wa Juu" max="70">
+                <button class="btn-filter" onclick="loadUsersToDiscover()">Chuja</button>
+            </div>
+        </div>
+
         <div class="discovery-feed" id="discoveryFeedContainer"></div>
     </div>
 
@@ -160,12 +184,29 @@
         }
     }
 
+    // Imesasishwa kutuma vigezo vya filter kwenda API
     async function loadUsersToDiscover() {
         try {
-            const res = await fetch('/api/admin/users');
+            const region = document.getElementById('filterRegion').value.trim();
+            const seeking = document.getElementById('filterSeeking').value;
+            const minAge = document.getElementById('filterMinAge').value;
+            const maxAge = document.getElementById('filterMaxAge').value;
+
+            let params = new URLSearchParams();
+            if (region) params.append('region', region);
+            if (seeking && seeking !== 'All') params.append('seeking', seeking);
+            if (minAge) params.append('minAge', minAge);
+            if (maxAge) params.append('maxAge', maxAge);
+
+            const res = await fetch(`/api/admin/users?${params.toString()}`);
             const users = await res.json();
             const feed = document.getElementById('discoveryFeedContainer');
             feed.innerHTML = '';
+
+            if (users.length === 0) {
+                feed.innerHTML = `<p style="text-align:center; color:#777; font-size:13px; margin-top:20px;">Hakuna wachumba waliopatikana kwa vigezo hivi.</p>`;
+                return;
+            }
 
             users.forEach(u => {
                 if (u.id !== currentUser.id && u.whatsappNumber !== currentUser.whatsappNumber) {
