@@ -3,378 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TanzaniaSoulMate - Discover</title>
+    <title>BongoHearts - Discover & Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #d63384;
-            --primary-hover: #c02974;
-            --text-dark: #111827;
-            --text-muted: #4b5563;
-            --bg-light: #fff0f3;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; } }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-        }
+        /* Header ya Juu */
+        .app-header { padding: 15px 20px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
+        .app-header h2 { font-size: 20px; color: #ff3366; font-weight: 700; }
+        .user-mini-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .user-mini-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid #ff3366; }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 40px;
-            background: #ffffff;
-            border-bottom: 1px solid #f3f4f6;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+        /* Sehemu za Ndani (Tabs) */
+        .tab-content { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding-bottom: 70px; }
+        .tab-content.active { display: flex; }
 
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--text-dark);
-            text-decoration: none;
-        }
+        /* Nav ya Chini */
+        .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #f0f0f0; z-index: 100; }
+        .nav-item { text-align: center; color: #888; font-size: 11px; cursor: pointer; text-decoration: none; transition: 0.3s; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 3px; }
+        .nav-item.active { color: #ff3366; }
 
-        .logo span {
-            color: var(--primary);
-        }
+        /* Kadi za Wachumba */
+        .discovery-feed { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .profile-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; }
+        .profile-img-container { width: 100%; height: 320px; position: relative; background: #eee; }
+        .profile-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-info { padding: 15px; }
+        .profile-name { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 5px; }
+        .profile-details { font-size: 13px; color: #666; margin-bottom: 10px; display: flex; gap: 15px; }
+        .profile-bio { font-size: 13px; color: #444; line-height: 1.5; margin-bottom: 15px; }
+        
+        .btn-chat { width: 100%; padding: 12px; background: #ff3366; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        /* Sehemu ya Meseji / Inbox */
+        .inbox-list { padding: 15px; }
+        .inbox-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #f9f9f9; cursor: pointer; text-decoration: none; color: inherit; }
+        .inbox-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .inbox-info { flex: 1; }
+        .inbox-name { font-weight: 600; font-size: 14px; color: #111; }
+        .inbox-preview { font-size: 12px; color: #777; margin-top: 3px; }
 
-        .unread-badge {
-            background: #ef4444;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            display: none;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .logout-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        h2 {
-            margin-bottom: 15px;
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            background: #ffffff;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .filter-btn.active, .filter-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .users-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .user-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-            padding-bottom: 15px;
-        }
-
-        .user-card img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-        }
-
-        .user-card h3 {
-            margin: 12px 0 5px 0;
-            font-size: 18px;
-        }
-
-        .user-card p {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin: 0 0 15px 0;
-        }
-
-        .chat-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .chat-btn:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Unread Popup Modal */
-        .unread-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .unread-box {
-            background: white;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            background: var(--primary);
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-        }
-
-        .close-chat {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .unread-list {
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .unread-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #f9fafb;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }
+        /* Eneo la Mazungumzo (Chat Room Modal) */
+        #chatModal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 200; display: none; flex-direction: column; }
+        .chat-header { padding: 15px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #fafafa; display: flex; flex-direction: column; gap: 10px; }
+        .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-break: break-word; }
+        .msg-left { background: #fff; align-self: flex-start; border: 1px solid #eee; color: #333; }
+        .msg-right { background: #ff3366; color: #fff; align-self: flex-end; }
+        .chat-input-area { padding: 12px 15px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 13px; }
+        
+        /* Malipo na Ujumbe wa Kuisha kwa Muda (Hatua za 8 & 9) */
+        .paywall-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; padding: 25px; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); display: none; z-index: 300; text-align: center; }
+        .paywall-overlay h3 { color: #ff3366; margin-bottom: 10px; font-size: 20px; }
+        .paywall-overlay p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <header>
-        <a href="#" class="logo">❤️ Tanzania<span>SoulMate</span></a>
-        <div class="user-info">
-            <div id="unreadBadge" class="unread-badge" onclick="openUnreadModal()">💌 Meseji Mpya (0)</div>
-            <span id="welcomeUser">Karibu</span>
-            <button class="logout-btn" onclick="logout()">Toka (Log Out)</button>
+<div class="container">
+    
+    <!-- HEADER -->
+    <div class="app-header">
+        <h2>BongoHearts</h2>
+        <div class="user-mini-profile" onclick="switchTab('profileTab')">
+            <img id="headerUserPhoto" src="" alt="User">
+            <span id="headerUserName" style="font-size: 13px; font-weight: 600;">Akaunti</span>
         </div>
-    </header>
-
-    <div class="container">
-        <h2>Chagua Kundi Unalolitaka ❤️</h2>
-        
-        <div class="filter-tabs">
-            <button class="filter-btn active" onclick="filterUsers('Wote', this)">Wote</button>
-            <button class="filter-btn" onclick="filterUsers('Mchumba wa Ndoa', this)">Mchumba wa Ndoa</button>
-            <button class="filter-btn" onclick="filterUsers('Urafiki Tu', this)">Urafiki Tu</button>
-            <button class="filter-btn" onclick="filterUsers('Mahusiano ya Kawaida', this)">Mahusiano ya Kawaida</button>
-        </div>
-
-        <div id="usersGrid" class="users-grid"></div>
     </div>
 
-    <!-- Unread Messages Modal -->
-    <div id="unreadModal" class="unread-modal">
-        <div class="unread-box">
-            <div class="chat-header">
-                <span>Meseji Mpya Zilizotumwa Kwako</span>
-                <button class="close-chat" onclick="closeUnreadModal()">&times;</button>
+    <!-- TAB 1: DISCOVER (Wachumba) -->
+    <div id="discoverTab" class="tab-content active">
+        <div class="discovery-feed" id="discoveryFeedContainer">
+            <!-- Hapa kadi zitajaa kupitia Javascript -->
+        </div>
+    </div>
+
+    <!-- TAB 2: INBOX (Ujumbe) -->
+    <div id="inboxTab" class="tab-content">
+        <div style="padding: 15px 15px 5px; font-weight: 700; font-size: 16px;">Ujumbe Wako</div>
+        <div class="inbox-list" id="inboxListContainer">
+            <!-- Orodha ya waliochati itakaa hapa -->
+        </div>
+    </div>
+
+    <!-- TAB 3: PROFILE (Akaunti Yako & Hali ya Siku 5) -->
+    <div id="profileTab" class="tab-content" style="padding: 20px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img id="profilePagePhoto" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #ff3366; margin-bottom: 10px;">
+            <h3 id="profilePageName">Jina Lako</h3>
+            <p id="profilePagePhone" style="font-size: 13px; color: #777;"></p>
+        </div>
+
+        <div style="background: #fff5f7; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffccd5;">
+            <h4 style="color: #ff3366; font-size: 14px; margin-bottom: 5px;"><i class="fa-solid fa-clock"></i> Hali ya Ujumbe Wako</h4>
+            <p id="subStatusText" style="font-size: 13px; color: #555;">Unazo ujumbe za bure.</p>
+        </div>
+
+        <button class="btn" style="background: #25d366; color: white; margin-bottom: 10px;" onclick="triggerPayment()"><i class="fa-brands fa-whatsapp"></i> Lipa TZS 2,000 Kupata Siku 5</button>
+        <button class="btn" style="background: #333; color: white;" onclick="logout()">Toka Kwenye Mfumo (Logout)</button>
+    </div>
+
+    <!-- CHAT ROOM MODAL -->
+    <div id="chatModal">
+        <div class="chat-header">
+            <i class="fa-solid fa-arrow-left" style="cursor: pointer; font-size: 18px;" onclick="closeChat()"></i>
+            <img id="chatPartnerPhoto" src="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+            <div>
+                <div id="chatPartnerName" style="font-weight: 600; font-size: 14px;">Jina la Mtu</div>
+                <div id="chatSubStatus" style="font-size: 11px; color: #666;">Inapakia...</div>
             </div>
-            <div id="unreadList" class="unread-list"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessagesContainer">
+            <!-- Meseji zitajaa hapa -->
+        </div>
+
+        <div class="chat-input-area" id="chatInputArea">
+            <input type="text" id="chatInputText" placeholder="Andika ujumbe wako..." onkeypress="handleChatKeypress(event)">
+            <button onclick="sendChatMessage()" style="background: #ff3366; border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+
+        <!-- PAYWALL OVERLAY (Ikishika kikomo cha ujumbe wa bure au kuisha kwa siku 5) -->
+        <div class="paywall-overlay" id="paywallOverlay">
+            <h3>Ujumbe Wako Umeisha!</h3>
+            <p>Umeishiwa ujumbe za bure au siku 5 zimekwisha. Lipa TZS 2,000 sasa kupitia M-Pesa/TigoPesa uendelee kuchati bila kikomo kwa siku 5.</p>
+            <button class="btn" style="background: #25d366; color: white;" onclick="triggerPayment()"><i class="fa-brands fa-whatsapp"></i> Lipa TZS 2,000 Kupitia WhatsApp</button>
+            <p style="font-size: 11px; color: #999; margin-top: 15px; cursor: pointer;" onclick="closePaywall()">Rudi Nyuma</p>
         </div>
     </div>
 
-    <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) {
-            window.location.href = 'index.html';
-        } else {
-            document.getElementById('welcomeUser').innerText = `Karibu, ${currentUser.fullName}`;
+    <!-- NAVIGATION BAR -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('discoverTab', this)">
+            <i class="fa-solid fa-fire"></i> Gundua
+        </div>
+        <div class="nav-item" onclick="switchTab('inboxTab', this); loadInbox();">
+            <i class="fa-solid fa-comments"></i> Ujumbe
+        </div>
+        <div class="nav-item" onclick="switchTab('profileTab', this)">
+            <i class="fa-solid fa-user"></i> Akaunti
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentUser = JSON.parse(localStorage.getItem('bongoUser'));
+    if (!currentUser) {
+        window.location.href = 'index.html';
+    }
+
+    let currentChatReceiverId = null;
+
+    // Kuweka taarifa za mtumiaji kwenye Header na Profile
+    document.getElementById('headerUserPhoto').src = currentUser.photoData || 'https://via.placeholder.com/150';
+    document.getElementById('headerUserName').innerText = currentUser.fullName.split(' ')[0];
+    document.getElementById('profilePagePhoto').src = currentUser.photoData || 'https://via.placeholder.com/150';
+    document.getElementById('profilePageName').innerText = currentUser.fullName;
+    document.getElementById('profilePagePhone').innerText = "WhatsApp: " + currentUser.whatsappNumber;
+
+    updateProfileSubStatus();
+    loadUsersToDiscover();
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        
+        if (el) {
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
         }
+    }
 
-        let allUsers = [];
-        let unreadDataList = [];
+    async function loadUsersToDiscover() {
+        try {
+            const res = await fetch('/api/admin/users');
+            const users = await res.json();
+            const feed = document.getElementById('discoveryFeedContainer');
+            feed.innerHTML = '';
 
-        async function loadUsers() {
-            try {
-                const res = await fetch('/api/admin/users');
-                allUsers = await res.json();
-                displayUsers(allUsers);
-            } catch (err) {
-                console.error("Imeshindikana kupakia watumiaji", err);
+            users.forEach(u => {
+                if (u.id !== currentUser.id && u.whatsappNumber !== currentUser.whatsappNumber) {
+                    feed.innerHTML += `
+                        <div class="profile-card">
+                            <div class="profile-img-container">
+                                <img src="${u.photoData || 'https://via.placeholder.com/300'}" alt="${u.fullName}">
+                            </div>
+                            <div class="profile-info">
+                                <div class="profile-name">${u.fullName}, ${u.age || 24}</div>
+                                <div class="profile-details">
+                                    <span><i class="fa-solid fa-location-dot"></i> ${u.region || 'Tanzania'}</span>
+                                    <span><i class="fa-solid fa-heart"></i> ${u.seeking || 'Mchumba'}</span>
+                                </div>
+                                <div class="profile-bio">${u.bio || 'Mtu mzuri ninayependa mazungumzo ya maana.'}</div>
+                                <button class="btn-chat" onclick="openChat('${u.id}', '${u.fullName}', '${u.photoData}')">
+                                    <i class="fa-solid fa-comments"></i> Anza Mazungumzo
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        } catch (err) {
+            console.error("Hitilafu kupakia wachumba");
+        }
+    }
+
+    async function openChat(receiverId, receiverName, receiverPhoto) {
+        currentChatReceiverId = receiverId;
+        document.getElementById('chatPartnerName').innerText = receiverName;
+        document.getElementById('chatPartnerPhoto').src = receiverPhoto || 'https://via.placeholder.com/150';
+        document.getElementById('chatModal').style.display = 'flex';
+        document.getElementById('paywallOverlay').style.display = 'none';
+
+        await fetchChatMessages();
+    }
+
+    function closeChat() {
+        document.getElementById('chatModal').style.display = 'none';
+        currentChatReceiverId = null;
+        loadInbox();
+    }
+
+    async function fetchChatMessages() {
+        if (!currentChatReceiverId) return;
+        try {
+            const res = await fetch(`/api/chat/${currentUser.id}/${currentChatReceiverId}`);
+            const data = await res.json();
+            
+            const container = document.getElementById('chatMessagesContainer');
+            container.innerHTML = '';
+
+            data.messages.forEach(m => {
+                const isMe = m.senderId === currentUser.id.toString();
+                container.innerHTML += `
+                    <div class="msg-bubble ${isMe ? 'msg-right' : 'msg-left'}">
+                        ${m.text}
+                    </div>
+                `;
+            });
+            container.scrollTop = container.scrollHeight;
+
+            // Kuangalia kama ujumbe umezuiwa
+            if (!data.isAllowed) {
+                document.getElementById('paywallOverlay').style.display = 'block';
+                document.getElementById('chatSubStatus').innerText = "Ujumbe uimeisha (Lipa TZS 2,000)";
+            } else {
+                if (data.subscriptionExpiresAt) {
+                    document.getElementById('chatSubStatus').innerText = "Akaunti ina siku za kuchati";
+                } else {
+                    document.getElementById('chatSubStatus').innerText = `Ujumbe wa bure: ${data.freeMessagesLeft} zimebakia`;
+                }
             }
+        } catch (err) {
+            console.error("Hitilafu ya kupata meseji");
         }
+    }
 
-        function displayUsers(usersToDisplay) {
-            const grid = document.getElementById('usersGrid');
-            grid.innerHTML = '';
-            let filtered = usersToDisplay.filter(u => u.whatsappNumber !== currentUser.whatsappNumber);
+    async function sendChatMessage() {
+        const textInput = document.getElementById('chatInputText');
+        const text = textInput.value.trim();
+        if (!text || !currentChatReceiverId) return;
 
-            if (filtered.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-muted);">Hakuna watumiaji waliopatikana kwenye kundi hili.</p>';
+        try {
+            const res = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderId: currentUser.id,
+                    receiverId: currentChatReceiverId,
+                    text: text
+                })
+            });
+            const data = await res.json();
+
+            if (responseOkOrLocked(res, data)) {
+                textInput.value = '';
+                await fetchChatMessages();
+            }
+        } catch (err) {
+            console.error("Hitilafu kutuma ujumbe");
+        }
+    }
+
+    function responseOkOrLocked(res, data) {
+        if (res.ok) {
+            return true;
+        } else if (data.locked) {
+            document.getElementById('paywallOverlay').style.display = 'block';
+            return false;
+        }
+        return false;
+    }
+
+    function handleChatKeypress(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    }
+
+    async function loadInbox() {
+        try {
+            const res = await fetch(`/api/messages/unread?user=${currentUser.whatsappNumber}`);
+            const list = await res.json();
+            const inboxContainer = document.getElementById('inboxListContainer');
+            inboxContainer.innerHTML = '';
+
+            if (list.length === 0) {
+                inboxContainer.innerHTML = `<p style="text-align:center; color:#777; font-size:13px; margin-top:20px;">Hakuna ujumbe mpya kwa sasa.</p>`;
                 return;
             }
 
-            filtered.forEach(u => {
-                const card = document.createElement('div');
-                card.className = 'user-card';
-                const userPhoto = u.photoData || 'https://via.placeholder.com/250';
-
-                card.innerHTML = `
-                    <img src="${userPhoto}" alt="Picha ya ${u.fullName}">
-                    <h3>${u.fullName}</h3>
-                    <p>Anatafuta: <b>${u.seeking || 'Urafiki Tu'}</b></p>
-                    <button class="chat-btn" onclick="openChat('${u.id}', '${u.fullName}')">Anzisha Mazungumzo</button>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function filterUsers(category, btnElement) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
-
-            if (category === 'Wote') {
-                displayUsers(allUsers);
-            } else {
-                const filtered = allUsers.filter(u => u.seeking === category);
-                displayUsers(filtered);
-            }
-        }
-
-        async function checkUnreadMessages() {
-            try {
-                const res = await fetch(`/api/messages/unread?user=${currentUser.whatsappNumber}`);
-                unreadDataList = await res.json();
-                const badge = document.getElementById('unreadBadge');
-
-                let totalUnread = unreadDataList.reduce((sum, item) => sum + item.count, 0);
-
-                if (totalUnread > 0) {
-                    badge.innerText = `💌 Meseji Mpya (${totalUnread})`;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            } catch (err) {
-                console.error("Hitilafu ya kukagua unread", err);
-            }
-        }
-
-        function openUnreadModal() {
-            const listContainer = document.getElementById('unreadList');
-            listContainer.innerHTML = '';
-
-            if (unreadDataList.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center; color:#6b7280;">Hakuna ujumbe mpya.</p>';
-            } else {
-                unreadDataList.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'unread-item';
-                    div.innerHTML = `
-                        <div>
-                            <b>${item.senderName}</b><br>
-                            <span style="font-size: 12px; color: #6b7280;">Ujumbe (${item.count}) haujasomwa</span>
+            list.forEach(item => {
+                inboxContainer.innerHTML += `
+                    <div class="inbox-item" onclick="openChat('${item.senderId}', '${item.senderName}', '')">
+                        <div style="width:50px; height:50px; background:#ff3366; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">${item.senderName[0]}</div>
+                        <div class="inbox-info">
+                            <div class="inbox-name">${item.senderName}</div>
+                            <div class="inbox-preview">Ujumbe mpya (${item.count})</div>
                         </div>
-                        <button class="chat-btn" style="padding: 6px 12px; font-size: 12px;" onclick="openChatFromUnread('${item.senderId}', '${item.senderName}')">Soma</button>
-                    `;
-                    listContainer.appendChild(div);
-                });
+                    </div>
+                `;
+            });
+        } catch (err) {
+            console.error("Hitilafu inbox");
+        }
+    }
+
+    async function triggerPayment() {
+        try {
+            const res = await fetch(`/api/subscribe/${currentUser.id}`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                currentUser.subscriptionExpiresAt = data.expiresAt;
+                currentUser.freeMessagesLeft = 0;
+                localStorage.setItem('bongoUser', JSON.stringify(currentUser));
+                document.getElementById('paywallOverlay').style.display = 'none';
+                updateProfileSubStatus();
+                fetchChatMessages();
             }
-            document.getElementById('unreadModal').style.display = 'flex';
+        } catch (err) {
+            alert("Hitilafu wakati wa malipo.");
         }
+    }
 
-        function closeUnreadModal() {
-            document.getElementById('unreadModal').style.display = 'none';
+    function updateProfileSubStatus() {
+        const textEl = document.getElementById('subStatusText');
+        const now = new Date();
+        if (currentUser.subscriptionExpiresAt && new Date(currentUser.subscriptionExpiresAt) > now) {
+            textEl.innerText = "Una siku za kuchati bila kikomo hadi: " + new Date(currentUser.subscriptionExpiresAt).toLocaleDateString();
+        } else {
+            textEl.innerText = "Upo kwenye mfumo wa ujumbe wa bure. Lipa TZS 2,000 kupata siku 5 kamili.";
         }
+    }
 
-        function openChatFromUnread(senderId, name) {
-            closeUnreadModal();
-            openChat(senderId, name);
-        }
+    function closePaywall() {
+        document.getElementById('paywallOverlay').style.display = 'none';
+    }
 
-        function openChat(receiverId, name) {
-            window.location.href = `chat.html?id=${receiverId}&name=${encodeURIComponent(name)}`;
-        }
+    function logout() {
+        localStorage.removeItem('bongoUser');
+        window.location.href = 'index.html';
+    }
+</script>
 
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        }
-
-        loadUsers();
-        checkUnreadMessages();
-        setInterval(checkUnreadMessages, 3000);
-    </script>
 </body>
 </html>
