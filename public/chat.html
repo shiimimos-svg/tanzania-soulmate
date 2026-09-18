@@ -8,35 +8,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { 
+            background-color: #fdf2f4; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='60' height='60'%3E%3Cpath fill='%23ffb6c1' opacity='0.5' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+            background-size: 100px 100px;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
         .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
         @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
 
         /* Chat Header */
-        .chat-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 10; }
+        .chat-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+        .chat-header a { color: #333; font-size: 18px; text-decoration: none; }
         .chat-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .chat-header-info h3 { font-size: 16px; font-weight: 600; color: #111; }
-        .chat-header-info p { font-size: 11px; color: #666; }
-        .back-btn { font-size: 18px; color: #555; cursor: pointer; text-decoration: none; }
+        .chat-header-info h4 { font-size: 15px; font-weight: 600; color: #111; }
+        .chat-header-info p { font-size: 11px; color: #ff3366; font-weight: 500; }
 
         /* Messages Area */
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #fafafa; padding-bottom: 80px; }
-        .message { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; position: relative; word-break: break-word; }
-        .message.sent { background: #ff3366; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .message.received { background: #fff; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #eee; }
-        .message img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; background: #fafafa; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 15px; font-size: 13px; line-height: 1.4; word-break: break-word; }
+        .message.sent { background: #ff3366; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .message.received { background: #fff; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #eee; }
 
-        /* Chat Input Area */
-        .chat-input-area { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #eee; padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
-        .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; outline: none; }
-        .chat-input-area button { background: #ff3366; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        /* Input Area */
+        .chat-input-area { padding: 12px 15px; background: #fff; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; position: fixed; bottom: 0; width: 100%; max-width: 480px; z-index: 100; }
+        .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 13px; }
+        .chat-input-area input:focus { border-color: #ff3366; }
+        .chat-input-area button { background: #ff3366; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; }
+        .chat-input-area button:hover { background: #e02e5a; }
+        .chat-input-area button:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Paywall Modal */
-        .paywall-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
-        .paywall-content { background: white; padding: 30px; border-radius: 16px; text-align: center; width: 100%; max-width: 350px; }
-        .paywall-content h3 { color: #ff3366; margin-bottom: 10px; font-size: 20px; }
-        .paywall-content p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-        .btn-pay { background: #2e7d32; color: white; width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; }
+        /* Upgrade Modal Banner */
+        .paywall-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px 15px; text-align: center; font-size: 12px; position: fixed; bottom: 65px; width: 100%; max-width: 480px; z-index: 99; display: none; }
+        .paywall-banner a { color: #ff3366; font-weight: 600; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -45,40 +53,37 @@
     
     <!-- Header -->
     <div class="chat-header">
-        <a href="discover.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-        <img id="receiverPhoto" src="https://via.placeholder.com/150" alt="Avatar">
+        <a href="chats.html"><i class="fa-solid fa-arrow-left"></i></a>
+        <img id="receiverAvatar" src="https://via.placeholder.com/150" alt="Avatar">
         <div class="chat-header-info">
-            <h3 id="receiverName">Inapakia...</h3>
-            <p id="chatStatus">Ujumbe wa bure uliosalia: <span id="freeCount">5</span></p>
+            <h4 id="receiverName">Inapakia...</h4>
+            <p id="freeLimitText">Ujumbe wa bure uliosalia: 5</p>
         </div>
     </div>
 
     <!-- Messages Container -->
     <div class="chat-messages" id="messagesContainer">
-        <!-- Sehemu ya Ujumbe -->
+        <!-- Sehemu ya ujumbe -->
+    </div>
+
+    <!-- Paywall Warning if limit reached -->
+    <div class="paywall-banner" id="paywallBanner">
+        Umefikisha kikomo cha ujumbe 5 za bure! <a href="#" onclick="alert('Wasiliana na msimamizi au lipia kifurushi kuendelea.'); return false;">Lipia Hapa</a>
     </div>
 
     <!-- Input Area -->
     <div class="chat-input-area">
-        <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-
-    <!-- Paywall Modal -->
-    <div id="paywallModal" class="paywall-modal">
-        <div class="paywall-content">
-            <h3>Ujumbe Wako Umeisha!</h3>
-            <p>Ujumbe wako wa bure umeisha. Lipa <b>TZS 2,000</b> kupitia TigoPesa/M-Pesa kwenda namba <b>0713956223</b> (Amos Mwesigwa Begashe) kisha bonyeza kitufe hapa chini kuendelea kuchati kwa siku 5 mfululizo.</p>
-            <button class="btn-pay" onclick="simulatePayment()">Thibitisha Malipo (TZS 2,000)</button>
-        </div>
+        <input type="text" id="messageInput" placeholder="Andika ujumbe wako..." autocomplete="off">
+        <button id="sendBtn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 
 </div>
 
 <script>
-    let currentUser = null;
     let receiverId = null;
-    let receiverUser = null;
+    let currentUser = null;
+    let freeMessagesCount = 0;
+    const MAX_FREE_MESSAGES = 5;
 
     window.onload = async function() {
         const userStr = localStorage.getItem('soulmateUser');
@@ -92,116 +97,95 @@
         receiverId = urlParams.get('receiverId');
 
         if (!receiverId) {
-            window.location.href = 'discover.html';
+            window.location.href = 'chats.html';
             return;
         }
 
-        await fetchReceiverInfo();
-        await loadMessages();
+        // Angalia ni ujumbe ngapi ulishatumwa kutoka localStorage ya mtumiaji huyu
+        const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
+        const savedCount = localStorage.getItem(usageKey);
+        freeMessagesCount = savedCount ? parseInt(savedCount) : 0;
 
-        // Endelea kukagua ujumbe mpya kila baada ya sekunde 3
-        setInterval(loadMessages, 3000);
+        updateFreeLimitDisplay();
+
+        await loadReceiverInfo();
+        await loadMessages();
     };
 
-    async function fetchReceiverInfo() {
+    function updateFreeLimitDisplay() {
+        const remaining = MAX_FREE_MESSAGES - freeMessagesCount;
+        const limitText = document.getElementById('freeLimitText');
+        const msgInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const paywallBanner = document.getElementById('paywallBanner');
+
+        if (remaining > 0) {
+            limitText.innerText = `Ujumbe wa bure uliosalia: ${remaining}`;
+            paywallBanner.style.display = 'none';
+        } else {
+            limitText.innerText = `Ujumbe wa bure umekwisha!`;
+            msgInput.disabled = true;
+            msgInput.placeholder = "Kikomo cha bure kimeisha. Lipia ili uendelee.";
+            sendBtn.disabled = true;
+            paywallBanner.style.display = 'block';
+        }
+    }
+
+    async function loadReceiverInfo() {
         try {
             const res = await fetch(`/api/admin/users`);
             const users = await res.json();
-            receiverUser = users.find(u => u.id.toString() === receiverId);
-
-            if (receiverUser) {
-                document.getElementById('receiverName').innerText = receiverUser.fullName;
-                document.getElementById('receiverPhoto').src = receiverUser.photoData || 'https://via.placeholder.com/150';
+            const receiver = users.find(u => u.id.toString() === receiverId.toString());
+            if (receiver) {
+                document.getElementById('receiverName').innerText = receiver.fullName;
+                if (receiver.photoData) {
+                    document.getElementById('receiverAvatar').src = receiver.photoData;
+                }
             }
         } catch (err) {
-            console.error("Imeshindikana kupata taarifa za mpokeaji.");
+            console.error("Hitilafu kupakia taarifa za mpokeaji.");
         }
     }
 
     async function loadMessages() {
-        try {
-            const res = await fetch(`/api/chat/${currentUser.id}/${receiverId}`);
-            const data = await res.json();
-
-            if (res.ok) {
-                document.getElementById('freeCount').innerText = data.freeMessagesLeft;
-                
-                const container = document.getElementById('messagesContainer');
-                container.innerHTML = "";
-
-                if (data.messages.length === 0) {
-                    container.innerHTML = `<p style="text-align: center; color: #888; font-size: 12px; margin-top: 20px;">Anza mazungumzo na ${receiverUser ? receiverUser.fullName : 'huyu mtu'} leo!</p>`;
-                    return;
-                }
-
-                data.messages.forEach(msg => {
-                    const div = document.createElement('div');
-                    div.className = `message ${msg.senderId === currentUser.id.toString() ? 'sent' : 'received'}`;
-                    div.innerText = msg.text;
-                    container.appendChild(div);
-                });
-
-                container.scrollTop = container.scrollHeight;
-            }
-        } catch (err) {
-            console.error("Hitilafu wakati wa kupakia ujumbe.");
-        }
+        const container = document.getElementById('messagesContainer');
+        // Hapa unaweza kuongeza mantiki ya fetch ya ujumbe kutoka backend kama ipo
     }
 
-    async function sendMessage() {
+    function sendMessage() {
+        if (freeMessagesCount >= MAX_FREE_MESSAGES) {
+            alert("Umeishamaliza jumbe 5 za bure. Tafadhali lipia ili uendelee kuchati.");
+            return;
+        }
+
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
-
         if (!text) return;
 
-        try {
-            const res = await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    senderId: currentUser.id,
-                    receiverId: receiverId,
-                    text: text
-                })
-            });
+        // Ongeza ujumbe kwenye skrini
+        const container = document.getElementById('messagesContainer');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message sent';
+        msgDiv.innerText = text;
+        container.appendChild(msgDiv);
 
-            const data = await res.json();
+        input.value = '';
+        container.scrollTop = container.scrollHeight;
 
-            if (res.status === 403 && data.locked) {
-                document.getElementById('paywallModal').style.display = 'flex';
-                return;
-            }
+        // Ongeza idadi ya ujumbe uliotumika na uhifadhi
+        freeMessagesCount++;
+        const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
+        localStorage.setItem(usageKey, freeMessagesCount);
 
-            if (res.ok) {
-                input.value = "";
-                loadMessages();
-            } else {
-                alert(data.error || "Imeshindikana kutuma ujumbe.");
-            }
-        } catch (err) {
-            alert("Hitilafu ya mtandao.");
-        }
+        updateFreeLimitDisplay();
     }
 
-    async function simulatePayment() {
-        try {
-            const res = await fetch(`/api/subscribe/${currentUser.id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                alert(data.message);
-                document.getElementById('paywallModal').style.display = 'none';
-                loadMessages();
-            } else {
-                alert(data.error);
-            }
-        } catch (err) {
-            alert("Hitilafu wakati wa kulipia.");
+    // Ruhusu kutuma kwa kubonyeza Enter
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
         }
-    }
+    });
 </script>
 
 </body>
