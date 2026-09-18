@@ -42,9 +42,19 @@
         .chat-input-area button:hover { background: #e02e5a; }
         .chat-input-area button:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Upgrade Modal Banner */
+        /* Paywall Banner */
         .paywall-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px 15px; text-align: center; font-size: 12px; position: fixed; bottom: 65px; width: 100%; max-width: 480px; z-index: 99; display: none; }
-        .paywall-banner a { color: #ff3366; font-weight: 600; text-decoration: underline; }
+        .paywall-banner a { color: #ff3366; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+        /* Payment Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff; width: 90%; max-width: 380px; border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .modal-content h3 { color: #ff3366; font-size: 18px; margin-bottom: 10px; }
+        .modal-content p { font-size: 13px; color: #555; margin-bottom: 15px; line-height: 1.5; }
+        .modal-content .highlight-number { background: #fdf2f4; padding: 10px; border-radius: 8px; font-weight: 700; color: #ff3366; font-size: 15px; margin-bottom: 15px; border: 1px dashed #ff3366; }
+        .modal-content input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 15px; outline: none; text-align: center; }
+        .modal-content button { width: 100%; padding: 12px; background: #ff3366; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .modal-content .close-modal { background: #eee; color: #333; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -62,13 +72,11 @@
     </div>
 
     <!-- Messages Container -->
-    <div class="chat-messages" id="messagesContainer">
-        <!-- Sehemu ya ujumbe -->
-    </div>
+    <div class="chat-messages" id="messagesContainer"></div>
 
-    <!-- Paywall Warning if limit reached -->
+    <!-- Paywall Warning Banner -->
     <div class="paywall-banner" id="paywallBanner">
-        Umefikisha kikomo cha ujumbe 5 za bure! <a href="#" onclick="alert('Wasiliana na msimamizi au lipia kifurushi kuendelea.'); return false;">Lipia Hapa</a>
+        Umefikisha kikomo cha ujumbe 5 za bure! <a onclick="openPaymentModal()">Lipia Hapa</a>
     </div>
 
     <!-- Input Area -->
@@ -77,6 +85,21 @@
         <button id="sendBtn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-content">
+        <h3>Lipia Kifurushi cha Siku 5</h3>
+        <p>Tafadhali lipia kupitia namba ya simu hapa chini ili uweze kufunguliwa na kuendelea kuchati kwa siku 5:</p>
+        <div class="highlight-number">
+            Namba: 0713956223<br>
+            Jina: Amos Mwesigwa Begashe
+        </div>
+        <input type="text" id="payerPhone" placeholder="Weka namba yako uliyolipia" />
+        <button onclick="processPayment()">Thibitisha Malipo</button>
+        <button class="close-modal" onclick="closePaymentModal()">Ghairi</button>
+    </div>
 </div>
 
 <script>
@@ -101,31 +124,42 @@
             return;
         }
 
-        // Angalia ni ujumbe ngapi ulishatumwa kutoka localStorage ya mtumiaji huyu
-        const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
-        const savedCount = localStorage.getItem(usageKey);
-        freeMessagesCount = savedCount ? parseInt(savedCount) : 0;
+        // Angalia kama ana kifurushi hai cha siku 5
+        const subscriptionExpiry = localStorage.getItem(`sub_expiry_${currentUser.id}`);
+        const now = new Date().getTime();
+
+        if (subscriptionExpiry && now < parseInt(subscriptionExpiry)) {
+            freeMessagesCount = -999; // Haina kikomo kwa sasa
+        } else {
+            const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
+            const savedCount = localStorage.getItem(usageKey);
+            freeMessagesCount = savedCount ? parseInt(savedCount) : 0;
+        }
 
         updateFreeLimitDisplay();
-
         await loadReceiverInfo();
-        await loadMessages();
     };
 
     function updateFreeLimitDisplay() {
-        const remaining = MAX_FREE_MESSAGES - freeMessagesCount;
         const limitText = document.getElementById('freeLimitText');
         const msgInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const paywallBanner = document.getElementById('paywallBanner');
 
+        if (freeMessagesCount === -999) {
+            limitText.innerText = "Kifurushi cha Siku 5 kiko hai (Bila Kikomo)";
+            paywallBanner.style.display = 'none';
+            return;
+        }
+
+        const remaining = MAX_FREE_MESSAGES - freeMessagesCount;
         if (remaining > 0) {
             limitText.innerText = `Ujumbe wa bure uliosalia: ${remaining}`;
             paywallBanner.style.display = 'none';
         } else {
             limitText.innerText = `Ujumbe wa bure umekwisha!`;
             msgInput.disabled = true;
-            msgInput.placeholder = "Kikomo cha bure kimeisha. Lipia ili uendelee.";
+            msgInput.placeholder = "Kikomo kimeisha. Lipia ili uendelee.";
             sendBtn.disabled = true;
             paywallBanner.style.display = 'block';
         }
@@ -147,14 +181,9 @@
         }
     }
 
-    async function loadMessages() {
-        const container = document.getElementById('messagesContainer');
-        // Hapa unaweza kuongeza mantiki ya fetch ya ujumbe kutoka backend kama ipo
-    }
-
     function sendMessage() {
-        if (freeMessagesCount >= MAX_FREE_MESSAGES) {
-            alert("Umeishamaliza jumbe 5 za bure. Tafadhali lipia ili uendelee kuchati.");
+        if (freeMessagesCount !== -999 && freeMessagesCount >= MAX_FREE_MESSAGES) {
+            openPaymentModal();
             return;
         }
 
@@ -162,7 +191,6 @@
         const text = input.value.trim();
         if (!text) return;
 
-        // Ongeza ujumbe kwenye skrini
         const container = document.getElementById('messagesContainer');
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message sent';
@@ -172,15 +200,45 @@
         input.value = '';
         container.scrollTop = container.scrollHeight;
 
-        // Ongeza idadi ya ujumbe uliotumika na uhifadhi
-        freeMessagesCount++;
-        const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
-        localStorage.setItem(usageKey, freeMessagesCount);
-
-        updateFreeLimitDisplay();
+        if (freeMessagesCount !== -999) {
+            freeMessagesCount++;
+            const usageKey = `free_msgs_${currentUser.id}_${receiverId}`;
+            localStorage.setItem(usageKey, freeMessagesCount);
+            updateFreeLimitDisplay();
+        }
     }
 
-    // Ruhusu kutuma kwa kubonyeza Enter
+    function openPaymentModal() {
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    function processPayment() {
+        const phone = document.getElementById('payerPhone').value.trim();
+        if (!phone || phone.length < 10) {
+            alert("Tafadhali ingiza namba yako ya simu iliyofanya malipo.");
+            return;
+        }
+
+        // Kuweka muda wa siku 5 kuanzia sasa (Siku 5 = 5 * 24 * 60 * 60 * 1000 milisekunde)
+        const fiveDaysInMillis = 5 * 24 * 60 * 60 * 1000;
+        const expiryTime = new Date().getTime() + fiveDaysInMillis;
+
+        localStorage.setItem(`sub_expiry_${currentUser.id}`, expiryTime);
+        freeMessagesCount = -999;
+
+        closePaymentModal();
+        document.getElementById('messageInput').disabled = false;
+        document.getElementById('messageInput').placeholder = "Andika ujumbe wako...";
+        document.getElementById('sendBtn').disabled = false;
+        updateFreeLimitDisplay();
+        
+        alert("Malipo yamethibitishwa! Akaunti yako imefunguliwa kuendelea kuchati kwa siku 5 zijazo.");
+    }
+
     document.getElementById('messageInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             sendMessage();
