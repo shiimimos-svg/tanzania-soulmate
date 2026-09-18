@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujumbe - Tanzania Soul Mate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
+        @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
+
+        /* Header */
+        .chats-header { padding: 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+        .chats-header h2 { font-size: 18px; font-weight: 600; color: #ff3366; }
+
+        /* Chats List */
+        .chats-list { flex: 1; overflow-y: auto; background: #fafafa; padding-bottom: 70px; }
+        .chat-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: #fff; border-bottom: 1px solid #f2f2f2; text-decoration: none; color: inherit; transition: background 0.2s; }
+        .chat-item:hover { background: #fff5f7; }
+        .chat-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .chat-info { flex: 1; }
+        .chat-info h4 { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 3px; }
+        .chat-info p { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+
+        /* Bottom Nav */
+        .bottom-nav { display: flex; background: #fff; border-top: 1px solid #eee; padding: 10px 0; position: fixed; bottom: 0; width: 100%; max-width: 480px; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; color: #888; font-size: 11px; text-decoration: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: #ff3366; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Header -->
+    <div class="chats-header">
+        <h2>Ujumbe Wangu (Inbox)</h2>
+        <i class="fa-solid fa-comments" style="color: #ff3366; font-size: 20px;"></i>
+    </div>
+
+    <!-- Chats List Area -->
+    <div class="chats-list" id="chatsContainer">
+        <p style="text-align: center; color: #888; margin-top: 40px; font-size: 13px;">Inapakia mazungumzo...</p>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+        <a href="discover.html" class="nav-item">
+            <i class="fa-solid fa-fire"></i>
+            <span>Gundua</span>
+        </a>
+        <a href="chats.html" class="nav-item active">
+            <i class="fa-solid fa-comments"></i>
+            <span>Ujumbe</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fa-solid fa-user"></i>
+            <span>Profaili Yangu</span>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    window.onload = async function() {
+        const userStr = localStorage.getItem('soulmateUser');
+        if (!userStr) {
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        const currentUser = JSON.parse(userStr);
+        await loadConversations(currentUser.id);
+    };
+
+    async function loadConversations(userId) {
+        try {
+            // Tunachukua orodha ya watumiaji wote ili tuweze kuonyesha picha na majina yao kwenye inbox
+            const resUsers = await fetch(`/api/admin/users`);
+            const users = await resUsers.json();
+
+            const container = document.getElementById('chatsContainer');
+            container.innerHTML = "";
+
+            // Tunachuja tujue ni nani na nani wamekuwa na mazungumzo au tunaweza kuonyesha orodha ya wachumba waliopo
+            // Ili kurahisisha inbox, tunawaonyesha watumiaji wengine ambapo unaweza kubonyeza yeyote ukaanza naye chat moja kwa moja
+            const otherUsers = users.filter(u => u.id.toString() !== userId.toString());
+
+            if (otherUsers.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #888; margin-top: 40px; font-size: 13px;">Hakuna jumbe kwa sasa.</p>`;
+                return;
+            }
+
+            otherUsers.forEach(user => {
+                const item = document.createElement('a');
+                item.href = `chat.html?receiverId=${user.id}`;
+                item.className = 'chat-item';
+                
+                item.innerHTML = `
+                    <img src="${user.photoData || 'https://via.placeholder.com/150'}" alt="Avatar">
+                    <div class="chat-info">
+                        <h4>${user.fullName}</h4>
+                        <p>Bonyeza kuona ujumbe na kuchati...</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+
+        } catch (err) {
+            console.error("Hitilafu wakati wa kupakia orodha ya jumbe.");
+            document.getElementById('chatsContainer').innerHTML = `<p style="text-align: center; color: #ff3366; margin-top: 40px; font-size: 13px;">Imeshindikana kupakia ujumbe.</p>`;
+        }
+    }
+</script>
+
+</body>
+</html>
