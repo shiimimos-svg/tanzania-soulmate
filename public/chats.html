@@ -8,7 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #fdf2f4; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { 
+            background-color: #fdf2f4; 
+            /* Hapa nimeongeza kopakopa za mapenzi kwenye background ya ukurasa */
+            background-image: radial-gradient(#ff3366 0.75px, transparent 0.75px), radial-gradient(#ff3366 0.75px, #fdf2f4 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
         .container { width: 100%; max-width: 480px; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
         @media(min-width: 481px) { .container { min-height: 85vh; border-radius: 20px; overflow: hidden; } }
 
@@ -79,15 +90,12 @@
 
     async function loadConversations(userId) {
         try {
-            // Tunachukua orodha ya watumiaji wote ili tuweze kuonyesha picha na majina yao kwenye inbox
             const resUsers = await fetch(`/api/admin/users`);
             const users = await resUsers.json();
 
             const container = document.getElementById('chatsContainer');
             container.innerHTML = "";
 
-            // Tunachuja tujue ni nani na nani wamekuwa na mazungumzo au tunaweza kuonyesha orodha ya wachumba waliopo
-            // Ili kurahisisha inbox, tunawaonyesha watumiaji wengine ambapo unaweza kubonyeza yeyote ukaanza naye chat moja kwa moja
             const otherUsers = users.filter(u => u.id.toString() !== userId.toString());
 
             if (otherUsers.length === 0) {
